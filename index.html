@@ -1,0 +1,571 @@
+<title>Estudos CGU Cargo 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: painel de trabalho com abas no topo; conteúdo em coluna única larga, cartões só onde separam funções. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunk:#e9edf3; --line:#d6dce6;
+  --fg:#18212f; --muted:#5a667a; --accent:#2b54c9; --accent-ink:#ffffff;
+  --mark:#f4d447; --mark-ink:#2b2400;
+  --ok:#1f8a5b; --warn:#b7791f; --bad:#c2413a;
+  --l0:#cfd6e1; --l1:#9fb6ec; --l2:#5b82e0; --l3:#1f8a5b;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151d; --surface:#171e29; --sunk:#0c1118; --line:#2a3443;
+  --fg:#e6ebf3; --muted:#9aa6b8; --accent:#7f9ff5; --accent-ink:#0d1320;
+  --mark:#e8c93c; --mark-ink:#221c00;
+  --ok:#4cc38a; --warn:#e0a84a; --bad:#f07a72;
+  --l0:#2c3646; --l1:#3b5694; --l2:#5f86ea; --l3:#3fb27e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151d; --surface:#171e29; --sunk:#0c1118; --line:#2a3443;
+  --fg:#e6ebf3; --muted:#9aa6b8; --accent:#7f9ff5; --accent-ink:#0d1320;
+  --mark:#e8c93c; --mark-ink:#221c00;
+  --ok:#4cc38a; --warn:#e0a84a; --bad:#f07a72;
+  --l0:#2c3646; --l1:#3b5694; --l2:#5f86ea; --l3:#3fb27e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:12px 0}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.25rem;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:.78rem;color:var(--muted);letter-spacing:0}
+.sync{margin-left:auto;font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)}
+nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-top:8px}
+nav button{font:500 .9rem var(--f-body);background:none;border:0;color:var(--muted);padding:8px 12px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 48px}
+section[hidden]{display:none}
+h2{font-family:var(--f-display);font-weight:700;font-size:1.35rem;margin:0 0 4px;text-wrap:balance;letter-spacing:-.01em}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.lede{color:var(--muted);margin:0 0 18px;max-width:65ch}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.stat{background:var(--surface);padding:12px 14px}
+.stat b{display:block;font-family:var(--f-mono);font-size:1.45rem;font-weight:500;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.bar{height:8px;background:var(--l0);border-radius:4px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.disc-row{display:grid;grid-template-columns:44px 1fr 52px;gap:10px;align-items:center;font-size:.86rem;padding:5px 0}
+.disc-row .id{font-family:var(--f-mono);color:var(--muted);font-size:.8rem}
+.disc-row .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.slot{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .h{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding-top:2px}
+.slot .t{min-width:0}
+.slot .t b{display:block;font-weight:600}
+.slot .t small{color:var(--muted);display:block}
+.pill{display:inline-block;font:500 .7rem var(--f-mono);padding:1px 6px;border-radius:999px;background:var(--sunk);color:var(--muted);vertical-align:1px}
+.pill.star{background:var(--mark);color:var(--mark-ink)}
+.pill.novo{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.pill.due{background:var(--bad);color:#fff}
+.btn{font:500 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:3px 9px;font-size:.78rem}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.danger{color:var(--bad)}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+.rev{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.rev:first-of-type{border-top:0}
+.rev input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent)}
+.rev div{min-width:0}
+.rev small{color:var(--muted);display:block}
+/* edital */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.filters input[type=search]{flex:1 1 220px}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 9px;min-width:0}
+label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+details.disc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px}
+details.disc>summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+details.disc>summary::-webkit-details-marker{display:none}
+summary .dn{font-weight:600;min-width:0}
+summary .dn .id{font-family:var(--f-mono);color:var(--accent);margin-right:6px}
+summary .meta{font-size:.78rem;color:var(--muted)}
+summary .bar{grid-column:1/-1}
+.nota{font-size:.82rem;color:var(--muted);padding:0 14px 6px;font-style:italic}
+.topico{padding:4px 14px 10px}
+.topico h4{font-size:.85rem;margin:8px 0 4px;color:var(--muted);font-weight:600}
+.item{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:8px 0;border-top:1px dashed var(--line);align-items:center}
+.item .tx{min-width:0;font-size:.92rem}
+.item .tx .iid{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);margin-right:6px}
+.item .tx small{display:block;color:var(--muted);font-size:.78rem}
+.lv{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.lv button{font:500 .78rem var(--f-mono);border:0;background:var(--surface);color:var(--muted);width:30px;height:28px;cursor:pointer;border-left:1px solid var(--line)}
+.lv button:first-child{border-left:0}
+.lv button[aria-pressed="true"][data-l="0"]{background:var(--l0);color:var(--fg)}
+.lv button[aria-pressed="true"][data-l="1"]{background:var(--l1);color:#fff}
+.lv button[aria-pressed="true"][data-l="2"]{background:var(--l2);color:#fff}
+.lv button[aria-pressed="true"][data-l="3"]{background:var(--l3);color:#fff}
+.lvkey{font-size:.78rem;color:var(--muted);margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:4px 16px}
+.lvkey b{font-family:var(--f-mono)}
+/* forms */
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.calc{font-size:.85rem;color:var(--muted)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td input.q{width:64px;text-align:right}
+.week{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;min-width:880px}
+.day h4{margin:0 0 6px;font-size:.8rem;display:flex;justify-content:space-between}
+.day h4 input{width:48px;padding:2px 4px;text-align:right;font-size:.78rem}
+.blk{font-size:.78rem;padding:6px 8px;border-radius:6px;margin-bottom:6px;background:var(--sunk);border-left:3px solid var(--c,var(--accent))}
+.blk b{font-family:var(--f-mono);font-weight:500}
+.day.today h4{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:6px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
+.hint{font-size:.8rem;color:var(--muted)}
+.mark{background:var(--mark);color:var(--mark-ink);padding:0 3px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:560px){.item{grid-template-columns:1fr}.slot{grid-template-columns:1fr auto}.slot .h{grid-column:1/-1}}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Estudos CGU · Cargo 3<small>AFFC · Infraestrutura de TI · Cebraspe</small></div>
+      <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">Carregando…</span></div>
+    </div>
+    <nav role="tablist" id="tabs">
+      <button role="tab" data-tab="hoje" aria-selected="true">Hoje</button>
+      <button role="tab" data-tab="edital" aria-selected="false">Edital</button>
+      <button role="tab" data-tab="registro" aria-selected="false">Registrar estudo</button>
+      <button role="tab" data-tab="ciclo" aria-selected="false">Prioridades e ciclo</button>
+      <button role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="hoje">
+  <h2 id="hojeTitulo">Hoje</h2>
+  <p class="lede" id="hojeLede"></p>
+  <div class="stats" id="stats"></div>
+  <div class="grid g2">
+    <div class="card">
+      <h3>Ciclo de hoje</h3>
+      <div id="slotsHoje"></div>
+    </div>
+    <div class="card">
+      <h3>Revisões</h3>
+      <div id="revs"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Progresso por disciplina</h3>
+    <div id="discBars"></div>
+    <div class="legend"><span><i style="background:var(--l0)"></i>Nível 0</span><span><i style="background:var(--l1)"></i>Nível 1</span><span><i style="background:var(--l2)"></i>Nível 2</span><span><i style="background:var(--l3)"></i>Nível 3</span></div>
+  </div>
+</section>
+
+<section id="edital" hidden>
+  <h2>Edital verticalizado</h2>
+  <p class="lede">329 itens do edital nº 1/2026, extraídos da sua aba “Página8”. Marque o nível de cada item; prioridades e progresso se recalculam sozinhos.</p>
+  <div class="lvkey"><span><b>0</b> nunca estudei</span><span><b>1</b> já vi, preciso relembrar</span><span><b>2</b> revisei por questões</span><span><b>3</b> questões + material de revisão</span></div>
+  <div class="filters">
+    <input type="search" id="fBusca" placeholder="Buscar item (ex.: VLAN, LGPD)">
+    <select id="fProva"><option value="">Todas as provas</option><option value="P1">P1 · Básicos</option><option value="P2">P2 · Complementares</option><option value="P3">P3 · Específicos</option></select>
+    <select id="fNivel"><option value="">Qualquer nível</option><option value="0">Só nível 0</option><option value="lt2">Abaixo de 2</option><option value="lt3">Abaixo de 3</option><option value="3">Só nível 3</option></select>
+    <label class="chk"><input type="checkbox" id="fStar"> só ★</label>
+  </div>
+  <div id="editalList"></div>
+</section>
+
+<section id="registro" hidden>
+  <h2>Registrar estudo</h2>
+  <p class="lede">Substitui as abas semanais (SEMANA O1, C1.x). Páginas, percentual de acertos e nota líquida são calculados; o item estudado sobe de nível e ganha revisões agendadas.</p>
+  <div class="card">
+    <form id="fSessao" class="form" autocomplete="off">
+      <label>Data<input type="date" id="sData" required></label>
+      <label>Disciplina<select id="sDisc" required></select></label>
+      <label class="full">Item do edital (opcional)<select id="sItem"></select></label>
+      <label>Minutos estudados<input type="number" id="sMin" min="0" step="5" value="60"></label>
+      <label>Material<input type="text" id="sMat" placeholder="ex.: Kurose cap. 4, QC Cebraspe"></label>
+      <label>Página inicial<input type="number" id="sPi" min="0"></label>
+      <label>Página final<input type="number" id="sPf" min="0"></label>
+      <label>Questões feitas<input type="number" id="sQ" min="0"></label>
+      <label>Acertos<input type="number" id="sA" min="0"></label>
+      <div class="full calc" id="sCalc"></div>
+      <div class="full"><button class="btn pri" type="submit">Salvar sessão</button></div>
+    </form>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Esta semana por disciplina</h3>
+    <div class="tbl"><table id="tSemana"></table></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Últimas sessões</h3>
+    <div class="tbl"><table id="tSessoes"></table></div>
+  </div>
+</section>
+
+<section id="ciclo" hidden>
+  <h2>Prioridades e ciclo semanal</h2>
+  <p class="lede">Mesma lógica da sua aba Planejamento1: importância (pontos) × tamanho (itens) × (1 − domínio). O domínio vem dos níveis marcados no edital, então o ciclo se ajusta conforme você avança.</p>
+  <div class="card">
+    <h3>Peso das disciplinas</h3>
+    <div class="tbl"><table id="tPrior"></table></div>
+    <p class="hint">O edital não divide os itens de cada prova por disciplina. As questões estimadas começam com divisão igual (P1: 40, P2: 40, P3: 90 itens) e você pode ajustar.</p>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Ciclo da semana <span class="hint" id="cicloTotal"></span></h3>
+    <div class="tbl"><div class="week" id="week"></div></div>
+    <p class="hint">Blocos de 1 hora. Altere as horas de cada dia direto no cabeçalho.</p>
+  </div>
+</section>
+
+<section id="ajustes" hidden>
+  <h2>Ajustes</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>Prova e revisões</h3>
+      <div class="form">
+        <label>Data da prova<input type="date" id="cProva"></label>
+        <label>Revisões após (dias)<input type="text" id="cRev" placeholder="1, 7, 30"></label>
+      </div>
+      <p class="hint">Cada item estudado gera revisões nesses intervalos, contados a partir do primeiro estudo.</p>
+    </div>
+    <div class="card">
+      <h3>Backup</h3>
+      <p class="hint">Exporte tudo em JSON, e importe de volta quando quiser. O mesmo arquivo serve para migrar para a versão no GitHub Pages.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="bExport" type="button">Exportar backup</button>
+        <label class="btn" for="bImport">Importar backup</label>
+        <input type="file" id="bImport" accept="application/json,.json" hidden>
+      </div>
+      <div id="importConfirm"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const EDITAL = [{"id": "B1", "nome": "Estado, Democracia, Direitos e Ciência Política", "prova": "P1", "nota": "", "topicos": [{"n": 1, "nome": "Estado e legitimidade", "itens": [{"id": "B1.1.1", "t": "Estado, governo e administração", "obs": "↔ DA1"}, {"id": "B1.1.2", "t": "Autoridade, legitimidade e poder", "obs": ""}, {"id": "B1.1.3", "t": "Interesse público, pluralismo e conflitos distributivos", "obs": ""}]}, {"n": 2, "nome": "Democracia e representação", "itens": [{"id": "B1.2.1", "t": "Representação e participação", "obs": "↔ APP1"}, {"id": "B1.2.2", "t": "Responsabilização democrática (accountability)", "obs": ""}, {"id": "B1.2.3", "t": "Relações entre Executivo, Legislativo e Judiciário", "obs": "↔ DC3, DC4 (só em nível institucional)"}, {"id": "B1.2.4", "t": "Governabilidade e controles recíprocos", "obs": "↔ APP2"}]}, {"n": 3, "nome": "Federalismo e capacidades estatais", "itens": [{"id": "B1.3.1", "t": "Autonomia, coordenação e cooperação federativa", "obs": "↔ DC2"}, {"id": "B1.3.2", "t": "Capacidades administrativas e políticas", "obs": ""}, {"id": "B1.3.3", "t": "Burocracia, discricionariedade e implementação de direitos", "obs": ""}]}, {"n": 4, "nome": "Ordem constitucional e direitos", "itens": [{"id": "B1.4.1", "t": "Fundamentos e objetivos da República", "obs": "↔ DC1"}, {"id": "B1.4.2", "t": "Direitos fundamentais, sociais e políticos", "obs": "↔ DC1"}, {"id": "B1.4.3", "t": "Igualdade, devido processo e limites ao exercício do poder", "obs": ""}, {"id": "B1.4.4", "t": "Princípios da administração pública", "obs": "↔ DA4"}]}, {"n": 5, "nome": "Valor público e controle", "itens": [{"id": "B1.5.1", "t": "Resultados socialmente relevantes", "obs": ""}, {"id": "B1.5.2", "t": "Legitimidade, confiança e direitos", "obs": ""}, {"id": "B1.5.3", "t": "Controle interno, externo e social em perspectiva institucional", "obs": "↔ DA8, FAG1"}, {"id": "B1.5.4", "t": "Tensões entre eficiência, equidade e garantias", "obs": ""}]}, {"n": 6, "nome": "Corrupção como fenômeno político e social", "itens": [{"id": "B1.6.1", "t": "Abuso do poder confiado e apropriação de decisões públicas em benefício particular", "obs": "↔ APP1"}, {"id": "B1.6.2", "t": "Dimensões política, administrativa e público-privada da corrupção", "obs": ""}, {"id": "B1.6.3", "t": "Distinções entre corrupção, falha de gestão, conflito de interesses e ilícitos específicos", "obs": ""}, {"id": "B1.6.4", "t": "Relações e diferenças entre clientelismo, patronagem, nepotismo e captura", "obs": "↔ APP2 (clientelismo)"}]}, {"n": 7, "nome": "Mecanismos de reprodução e captura", "itens": [{"id": "B1.7.1", "t": "Assimetrias de poder e informação, incentivos e oportunidades", "obs": ""}, {"id": "B1.7.2", "t": "Relações principal-agente e problemas de ação coletiva", "obs": ""}, {"id": "B1.7.3", "t": "Normas sociais, tolerância organizacional e redes de favorecimento", "obs": ""}, {"id": "B1.7.4", "t": "Captura de políticas e influência indevida", "obs": ""}, {"id": "B1.7.5", "t": "Distinção entre representação legítima de interesses e favorecimento", "obs": ""}]}, {"n": 8, "nome": "Consequências e respostas à corrupção", "itens": [{"id": "B1.8.1", "t": "Efeitos sobre direitos, desigualdades, competição, alocação de recursos, qualidade dos serviços e confiança institucional", "obs": ""}, {"id": "B1.8.2", "t": "Relações entre prevenção, detecção, responsabilização e reparação", "obs": ""}, {"id": "B1.8.3", "t": "Controles democráticos, participação e capacidades estatais", "obs": ""}, {"id": "B1.8.4", "t": "Avaliação crítica das respostas e de seus efeitos não pretendidos (preservando devido processo e continuidade de serviços essenciais)", "obs": ""}]}, {"n": 9, "nome": "Estado e modelos de desenvolvimento econômico", "itens": [{"id": "B1.9.1", "t": "Arranjos de desenvolvimento: combinações de mercado, planejamento, regulação, provisão pública e atuação empresarial do Estado", "obs": ""}, {"id": "B1.9.2", "t": "Industrialização, inovação e transformação produtiva", "obs": ""}, {"id": "B1.9.3", "t": "Papel das empresas estatais: investimento de longo prazo, infraestrutura, financiamento e prestação de serviços públicos", "obs": "↔ DA7 (estatais)"}, {"id": "B1.9.4", "t": "Finalidade pública × concorrência × universalização × sustentabilidade fiscal e socioambiental", "obs": ""}, {"id": "B1.9.5", "t": "Capacidades estatais, riscos de captura e efeitos distributivos", "obs": ""}, {"id": "B1.9.6", "t": "Fundamentos constitucionais da atuação econômica do Estado", "obs": "↔ DC5"}, {"id": "B1.9.7", "t": "Comparação de alternativas institucionais à luz de objetivos, evidências e resultados", "obs": ""}]}]}, {"id": "B2", "nome": "Sociedade Brasileira, Desigualdades, Diversidade e Desenvolvimento", "prova": "P1", "nota": "Disciplina inteiramente nova — nenhum bloco do material antigo cobre.", "topicos": [{"n": 1, "nome": "Fundamentos sociológicos", "itens": [{"id": "B2.1.1", "t": "Instituições, socialização e ação coletiva", "obs": ""}, {"id": "B2.1.2", "t": "Estratificação e mobilidade social", "obs": ""}, {"id": "B2.1.3", "t": "Redes, poder, discriminação e reprodução das desigualdades", "obs": ""}]}, {"n": 2, "nome": "Formação social e cidadania no Brasil", "itens": [{"id": "B2.2.1", "t": "Heranças da escravidão, hierarquias sociais e construção da cidadania", "obs": ""}, {"id": "B2.2.2", "t": "Transformações nas relações entre Estado e sociedade", "obs": ""}, {"id": "B2.2.3", "t": "Mecanismos de inclusão e exclusão institucional", "obs": ""}]}, {"n": 3, "nome": "População, território e trabalho", "itens": [{"id": "B2.3.1", "t": "Transição demográfica, envelhecimento e cuidado", "obs": ""}, {"id": "B2.3.2", "t": "Desigualdades regionais, urbanas e rurais", "obs": ""}, {"id": "B2.3.3", "t": "Estrutura produtiva, informalidade e mudanças tecnológicas no trabalho", "obs": ""}]}, {"n": 4, "nome": "Diversidade e acesso a direitos", "itens": [{"id": "B2.4.1", "t": "Relações étnico-raciais", "obs": ""}, {"id": "B2.4.2", "t": "Gênero e sexualidade", "obs": ""}, {"id": "B2.4.3", "t": "Pessoas com deficiência", "obs": ""}, {"id": "B2.4.4", "t": "Idade", "obs": ""}, {"id": "B2.4.5", "t": "Povos indígenas e comunidades tradicionais", "obs": ""}, {"id": "B2.4.6", "t": "Interseccionalidade", "obs": ""}, {"id": "B2.4.7", "t": "Acessibilidade e barreiras administrativas e digitais", "obs": ""}]}, {"n": 5, "nome": "Desenvolvimento e realidade brasileira", "itens": [{"id": "B2.5.1", "t": "Pobreza, renda e proteção social", "obs": ""}, {"id": "B2.5.2", "t": "Educação, saúde, saneamento e habitação como problemas públicos", "obs": ""}, {"id": "B2.5.3", "t": "Sustentabilidade e vulnerabilidade climática", "obs": ""}, {"id": "B2.5.4", "t": "Leitura contextual de indicadores e desigualdades", "obs": ""}]}]}, {"id": "B3", "nome": "Ética Pública e Responsabilidade Profissional", "prova": "P1", "nota": "", "topicos": [{"n": 1, "nome": "Fundamentos da ética pública", "itens": [{"id": "B3.1.1", "t": "Interesse público, dignidade, justiça e responsabilidade", "obs": ""}, {"id": "B3.1.2", "t": "Relações entre deveres, consequências e virtudes profissionais (deontologia, consequencialismo e ética das virtudes)", "obs": ""}, {"id": "B3.1.3", "t": "Conflitos entre valores em decisões públicas", "obs": ""}]}, {"n": 2, "nome": "Deveres profissionais", "itens": [{"id": "B3.2.1", "t": "Imparcialidade, probidade, diligência e respeito", "obs": "↔ DA11"}, {"id": "B3.2.2", "t": "Autonomia técnica e responsabilidade", "obs": ""}, {"id": "B3.2.3", "t": "Limites da obediência hierárquica", "obs": "↔ DA4 (poder hierárquico)"}, {"id": "B3.2.4", "t": "Uso adequado de informação e recursos públicos", "obs": ""}, {"id": "B3.2.5", "t": "Valores e deveres de conduta ética da CGU aplicados a situações de trabalho (código de conduta próprio da CGU — material a buscar)", "obs": ""}]}, {"n": 3, "nome": "Conflitos de interesses e imparcialidade", "itens": [{"id": "B3.3.1", "t": "Lei nº 12.813/2013, arts. 3º a 5º, 8º e 10: identificação de interesses privados em conflito com a função pública; prevenção, consulta e encaminhamento", "obs": "↔ DA11"}, {"id": "B3.3.2", "t": "Lei nº 9.784/1999, arts. 18 a 21: impedimento e suspeição no processo administrativo federal", "obs": "↔ DA9"}, {"id": "B3.3.3", "t": "Comunicação e abstenção quando exigidas", "obs": ""}]}, {"n": 4, "nome": "Relações de trabalho e atendimento", "itens": [{"id": "B3.4.1", "t": "Dignidade, diversidade e relações de poder", "obs": ""}, {"id": "B3.4.2", "t": "Reconhecimento e prevenção de assédio e discriminação", "obs": ""}, {"id": "B3.4.3", "t": "Respeito, escuta e não retaliação", "obs": ""}, {"id": "B3.4.4", "t": "Distinção entre acolher uma pessoa, verificar fatos e atribuir responsabilidade", "obs": ""}]}, {"n": 5, "nome": "Integridade como responsabilidade institucional", "itens": [{"id": "B3.5.1", "t": "Coerência entre regras e práticas", "obs": ""}, {"id": "B3.5.2", "t": "Ambiente organizacional e incentivos", "obs": ""}, {"id": "B3.5.3", "t": "Canais de orientação e relato", "obs": ""}, {"id": "B3.5.4", "t": "Papel do exemplo, da confiança e da prestação de contas", "obs": ""}]}]}, {"id": "B4", "nome": "Administração Pública e Fundamentos de Políticas Públicas", "prova": "P1", "nota": "", "topicos": [{"n": 1, "nome": "Organização administrativa", "itens": [{"id": "B4.1.1", "t": "Administração direta e indireta", "obs": "↔ DA7"}, {"id": "B4.1.2", "t": "Descentralização e desconcentração", "obs": "↔ DA7"}, {"id": "B4.1.3", "t": "Agentes públicos", "obs": "↔ DA3 (só conceito e espécies)"}, {"id": "B4.1.4", "t": "Funções da administração pública: formulação, execução, regulação e controle de políticas e ações públicas", "obs": ""}, {"id": "B4.1.5", "t": "Arranjos de cooperação com entes federativos e entidades não estatais", "obs": ""}]}, {"n": 2, "nome": "Modelos de administração", "itens": [{"id": "B4.2.1", "t": "Burocracia e profissionalização", "obs": ""}, {"id": "B4.2.2", "t": "Gestão orientada a resultados", "obs": "↔ APP2"}, {"id": "B4.2.3", "t": "Participação e governança", "obs": "↔ APP1, APP2"}, {"id": "B4.2.4", "t": "Limites e contribuições de diferentes modelos na realidade brasileira", "obs": ""}]}, {"n": 3, "nome": "Políticas públicas", "itens": [{"id": "B4.3.1", "t": "Problema público, agenda e formulação", "obs": "↔ APP1"}, {"id": "B4.3.2", "t": "Instrumentos de ação estatal", "obs": ""}, {"id": "B4.3.3", "t": "Implementação, monitoramento e avaliação", "obs": "↔ APP1"}, {"id": "B4.3.4", "t": "Intersetorialidade e atores governamentais e sociais", "obs": ""}]}, {"n": 4, "nome": "Planejamento e recursos", "itens": [{"id": "B4.4.1", "t": "Funções do planejamento e do orçamento", "obs": "↔ APP2, AFO1"}, {"id": "B4.4.2", "t": "Relação entre PPA, LDO e LOA", "obs": "↔ AFO1"}, {"id": "B4.4.3", "t": "Receita e despesa em nível conceitual", "obs": "↔ AFO2"}, {"id": "B4.4.4", "t": "Restrições fiscais, escolhas alocativas e sustentabilidade das ações", "obs": ""}]}, {"n": 5, "nome": "Serviços e transformação digital", "itens": [{"id": "B4.5.1", "t": "Orientação ao usuário", "obs": "↔ DA6 (Lei 13.460)"}, {"id": "B4.5.2", "t": "Simplificação e acessibilidade", "obs": ""}, {"id": "B4.5.3", "t": "Coordenação de serviços", "obs": ""}, {"id": "B4.5.4", "t": "Oportunidades e riscos da automação e da inteligência artificial na administração", "obs": "↔ APP2 (Governo Digital)"}]}]}, {"id": "C1", "nome": "Fundamentos de Governança, Riscos e Integridade Pública e Privada", "prova": "P2", "nota": "", "topicos": [{"n": 1, "nome": "Governança e responsabilidades", "itens": [{"id": "C1.1.1", "t": "Distinção entre direção, gestão, controle e prestação de contas", "obs": "↔ APP2 (Decreto 9.203)"}, {"id": "C1.1.2", "t": "Papéis, supervisão, transparência e responsabilização", "obs": ""}, {"id": "C1.1.3", "t": "Relação entre decisões organizacionais, finalidade pública e direitos", "obs": ""}]}, {"n": 2, "nome": "Riscos e controles essenciais", "itens": [{"id": "C1.2.1", "t": "Risco, causa, consequência e controle", "obs": ""}, {"id": "C1.2.2", "t": "Prevenção e detecção", "obs": ""}, {"id": "C1.2.3", "t": "Proporcionalidade dos controles, segregação de funções e risco residual", "obs": ""}, {"id": "C1.2.4", "t": "Identificação de vulnerabilidades e de controles compatíveis com situações usuais, a partir de dados fornecidos (questão-caso)", "obs": ""}]}, {"n": 3, "nome": "Integridade pública", "itens": [{"id": "C1.3.1", "t": "Finalidades dos programas e medidas de integridade", "obs": "↔ CGU2 (Sistema de Integridade)"}, {"id": "C1.3.2", "t": "Compromisso da liderança, orientação ética, identificação de riscos, canais de relato e acompanhamento de ações", "obs": ""}, {"id": "C1.3.3", "t": "Prevenção de favorecimento, assédio e discriminação", "obs": ""}, {"id": "C1.3.4", "t": "Ambiente seguro e não retaliação", "obs": ""}]}, {"n": 4, "nome": "Integridade privada", "itens": [{"id": "C1.4.1", "t": "Finalidades dos programas de integridade (compliance) e sua relação com o poder público", "obs": ""}, {"id": "C1.4.2", "t": "Compromisso da direção, registros confiáveis, controles, diligência proporcional sobre terceiros, canais de relato e remediação", "obs": ""}, {"id": "C1.4.3", "t": "Diferença entre existência documental, implementação e efetividade dos mecanismos", "obs": ""}]}, {"n": 5, "nome": "Prevenção e melhoria institucional", "itens": [{"id": "C1.5.1", "t": "Cultura, incentivos e confiança", "obs": ""}, {"id": "C1.5.2", "t": "Diferenças de capacidade entre organizações; orientação e medidas proporcionais", "obs": ""}, {"id": "C1.5.3", "t": "Denúncias e resultados de controle como insumos de melhoria", "obs": ""}, {"id": "C1.5.4", "t": "Distinção entre baixa ocorrência e baixa detecção de problemas", "obs": ""}, {"id": "C1.5.5", "t": "Leitura de evidências simples sobre funcionamento e resultados das medidas", "obs": ""}]}]}, {"id": "C2", "nome": "Fundamentos de Transparência, Ouvidoria e Participação Social", "prova": "P2", "nota": "", "topicos": [{"n": 1, "nome": "Acesso à informação", "itens": [{"id": "C2.1.1", "t": "Transparência ativa e passiva", "obs": "↔ DA13"}, {"id": "C2.1.2", "t": "Finalidade de pedidos e recursos", "obs": "↔ DA13"}, {"id": "C2.1.3", "t": "Publicidade como regra e motivação das restrições", "obs": ""}, {"id": "C2.1.4", "t": "Distinção conceitual: informação classificada × sigilos previstos em lei × informação pessoal × documento preparatório", "obs": "↔ DA13"}, {"id": "C2.1.5", "t": "Acesso parcial e comunicação clara da decisão", "obs": ""}]}, {"n": 2, "nome": "Transparência e proteção de dados", "itens": [{"id": "C2.2.1", "t": "Compatibilização entre acesso à informação e proteção de dados pessoais", "obs": "↔ DA13 (LGPD)"}, {"id": "C2.2.2", "t": "Finalidade, necessidade e salvaguardas", "obs": ""}, {"id": "C2.2.3", "t": "Dados pessoais × dados pessoais sensíveis", "obs": ""}, {"id": "C2.2.4", "t": "Noções de tarjamento, anonimização e risco de reidentificação", "obs": "↔ T3.5"}]}, {"n": 3, "nome": "Ouvidoria e proteção das pessoas", "itens": [{"id": "C2.3.1", "t": "Finalidades das manifestações", "obs": "↔ CGU2 (Sistema de Ouvidorias), DA6"}, {"id": "C2.3.2", "t": "Acolhimento, encaminhamento e resposta ao usuário", "obs": ""}, {"id": "C2.3.3", "t": "Acessibilidade e linguagem cidadã", "obs": ""}, {"id": "C2.3.4", "t": "Proteção da identidade e prevenção de retaliação", "obs": ""}, {"id": "C2.3.5", "t": "Distinção entre receber um relato, apurar fatos e decidir sobre responsabilidade", "obs": ""}]}, {"n": 4, "nome": "Participação e melhoria de serviços", "itens": [{"id": "C2.4.1", "t": "Participação e controle social", "obs": "↔ APP1"}, {"id": "C2.4.2", "t": "Conselhos, consultas e escuta de usuários", "obs": "↔ APP1"}, {"id": "C2.4.3", "t": "Representatividade e barreiras à participação", "obs": ""}, {"id": "C2.4.4", "t": "Recorrências em manifestações como sinais de problemas", "obs": ""}, {"id": "C2.4.5", "t": "Subnotificação", "obs": ""}, {"id": "C2.4.6", "t": "Transparência ativa, dados abertos e Portal da Transparência como meios de acesso e controle", "obs": ""}, {"id": "C2.4.7", "t": "Qualidade, atualização, cobertura e limites da informação", "obs": ""}, {"id": "C2.4.8", "t": "Papel da CGU na orientação e no monitoramento da transparência e do acesso à informação (nível de finalidade institucional)", "obs": "↔ CGU1"}]}, {"n": 5, "nome": "Integridade da informação e comunicação", "itens": [{"id": "C2.5.1", "t": "Confiabilidade e contexto das fontes", "obs": ""}, {"id": "C2.5.2", "t": "Distinção entre fato, alegação e interpretação", "obs": ""}, {"id": "C2.5.3", "t": "Desinformação e efeitos sobre políticas públicas", "obs": ""}, {"id": "C2.5.4", "t": "Comunicação de incertezas e correção de erros", "obs": ""}, {"id": "C2.5.5", "t": "Liberdade de expressão e pluralismo", "obs": ""}, {"id": "C2.5.6", "t": "Distinção entre crítica legítima e desinformação", "obs": ""}]}]}, {"id": "C3", "nome": "Fundamentos de Direito Público Aplicado, Controle e Responsabilização", "prova": "P2", "nota": "", "topicos": [{"n": 1, "nome": "Decisão administrativa", "itens": [{"id": "C3.1.1", "t": "Competência, finalidade, motivação, proporcionalidade e segurança jurídica", "obs": "↔ DA2 (requisitos do ato)"}, {"id": "C3.1.2", "t": "Consideração das consequências e das condições de atuação", "obs": "↔ DA12 (LINDB, arts. 20 a 22 — base implícita)"}, {"id": "C3.1.3", "t": "Dever de fundamentação", "obs": ""}, {"id": "C3.1.4", "t": "Limites ao exercício do poder e à revisão de decisões", "obs": "↔ DA2 (anulação, revogação, convalidação), DA4"}]}, {"n": 2, "nome": "Processo e garantias", "itens": [{"id": "C3.2.1", "t": "Devido processo, contraditório, defesa e imparcialidade", "obs": "↔ DA9"}, {"id": "C3.2.2", "t": "Finalidade da instrução e da prova", "obs": ""}, {"id": "C3.2.3", "t": "Distinção entre procedimento investigativo e processo sancionador", "obs": ""}, {"id": "C3.2.4", "t": "Proteção de direitos e necessidade de fundamentar conclusões", "obs": ""}]}, {"n": 3, "nome": "Funções de controle e melhoria da gestão", "itens": [{"id": "C3.3.1", "t": "Finalidades do controle interno, externo e social", "obs": "↔ DA8, FAG1"}, {"id": "C3.3.2", "t": "Inserção institucional da CGU no Poder Executivo federal", "obs": "↔ CGU1"}, {"id": "C3.3.3", "t": "Avaliação da ação governamental e apoio ao aprimoramento da gestão, governança, controles e resultados das políticas públicas", "obs": ""}, {"id": "C3.3.4", "t": "Prevenção, detecção e correção de irregularidades", "obs": ""}, {"id": "C3.3.5", "t": "Autonomia técnica e responsabilidades dos gestores", "obs": ""}, {"id": "C3.3.6", "t": "Diferenças e complementaridade com o controle externo (Congresso Nacional com auxílio do TCU)", "obs": "↔ DC3 (fiscalização contábil e financeira)"}, {"id": "C3.3.7", "t": "Distinção entre avaliar a gestão, apurar fatos e aplicar sanções", "obs": ""}, {"id": "C3.3.8", "t": "Cooperação e compartilhamento lícito de informações", "obs": ""}]}, {"n": 4, "nome": "Responsabilização em nível introdutório", "itens": [{"id": "C3.4.1", "t": "Distinção entre indício, falha de gestão, irregularidade e responsabilidade", "obs": ""}, {"id": "C3.4.2", "t": "Finalidades e diferenças entre responsabilização de agentes públicos e de pessoas jurídicas", "obs": "↔ DA3, DA8"}, {"id": "C3.4.3", "t": "Noções de admissibilidade", "obs": "↔ CGU2 (Correição)"}, {"id": "C3.4.4", "t": "Noções de processo disciplinar (PAD)", "obs": "↔ DA3"}, {"id": "C3.4.5", "t": "Noções de processo administrativo de responsabilização (PAR)", "obs": "novo (Lei 12.846/2013, base implícita)", "novo": 1}, {"id": "C3.4.6", "t": "Noções de acordo de leniência", "obs": "novo (Lei 12.846/2013, base implícita)", "novo": 1}]}, {"n": 5, "nome": "Proteção e encaminhamento", "itens": [{"id": "C3.5.1", "t": "Distinção entre acolhimento, medidas de proteção, apuração de fatos e conclusão sancionadora (especialmente em assédio e discriminação)", "obs": ""}, {"id": "C3.5.2", "t": "Finalidades e garantias de cada atuação", "obs": ""}]}]}, {"id": "C4", "nome": "Fundamentos de Evidências, Dados e Inteligência Artificial", "prova": "P2", "nota": "Próxima da sua formação, mas o foco é raciocínio sobre evidência, não técnica de TI.", "topicos": [{"n": 1, "nome": "Perguntas e fontes", "itens": [{"id": "C4.1.1", "t": "Relação entre problema, pergunta e informação necessária", "obs": ""}, {"id": "C4.1.2", "t": "Fontes documentais, administrativas, estatísticas e de participação social", "obs": ""}, {"id": "C4.1.3", "t": "Distinção entre dado, evidência, interpretação e juízo de valor", "obs": ""}, {"id": "C4.1.4", "t": "Verificação de origem e confronto de fontes", "obs": ""}]}, {"n": 2, "nome": "Leitura de dados e indicadores", "itens": [{"id": "C4.2.1", "t": "Interpretação de tabelas, gráficos, proporções, taxas e medidas descritivas", "obs": "↔ Ciência de Dados Bloco 3 (agregações)"}, {"id": "C4.2.2", "t": "Denominadores, qualidade e comparabilidade", "obs": "↔ Ciência de Dados Bloco 3 (qualidade)"}, {"id": "C4.2.3", "t": "Indicadores de percepção × experiência × denúncias × detecção × sanções na análise da corrupção", "obs": ""}, {"id": "C4.2.4", "t": "Subnotificação e limites de inferência sobre a ocorrência da corrupção", "obs": ""}]}, {"n": 3, "nome": "Inferências e erros de raciocínio", "itens": [{"id": "C4.3.1", "t": "Associação e causalidade", "obs": ""}, {"id": "C4.3.2", "t": "Seleção e representatividade", "obs": ""}, {"id": "C4.3.3", "t": "Explicações alternativas e incerteza", "obs": ""}, {"id": "C4.3.4", "t": "Generalizações indevidas, falácia ecológica e viés de confirmação", "obs": ""}, {"id": "C4.3.5", "t": "Falsos positivos e falsos negativos", "obs": "↔ Ciência de Dados Bloco 4 (classificação)"}]}, {"n": 4, "nome": "Integridade da evidência e proteção", "itens": [{"id": "C4.4.1", "t": "Rastreabilidade e verificação de informações", "obs": ""}, {"id": "C4.4.2", "t": "Comunicação proporcional dos resultados e limites", "obs": ""}, {"id": "C4.4.3", "t": "Escuta sem indução, confidencialidade e risco de identificação indireta", "obs": ""}, {"id": "C4.4.4", "t": "Regimes de proteção: entrevistados em auditoria × participantes de pesquisa × denunciantes", "obs": ""}]}, {"n": 5, "nome": "Uso responsável de inteligência artificial", "itens": [{"id": "C4.5.1", "t": "Possibilidades de classificação, busca, síntese e apoio à análise", "obs": "↔ Ciência de Dados Bloco 4"}, {"id": "C4.5.2", "t": "Escolha entre IA, solução simples e revisão humana", "obs": ""}, {"id": "C4.5.3", "t": "Erros, conteúdo não sustentado (alucinação), vieses e efeitos sobre grupos", "obs": ""}, {"id": "C4.5.4", "t": "Proteção de informações, supervisão, rastreabilidade e contestação", "obs": ""}, {"id": "C4.5.5", "t": "Verificação de fontes e limites da automação de decisões que afetam direitos", "obs": ""}]}]}, {"id": "C5", "nome": "Fundamentos de Auditoria Governamental e Atuação Integrada da CGU", "prova": "P2", "nota": "", "topicos": [{"n": 1, "nome": "Propósito, serviços e papéis", "itens": [{"id": "C5.1.1", "t": "Contribuição da auditoria para a governança, os riscos, os controles e os resultados", "obs": "↔ FAG1 (MOT 2017)"}, {"id": "C5.1.2", "t": "Avaliação e consultoria como serviços de auditoria interna governamental", "obs": "↔ FAG1 (IN SFC 3/2017)"}, {"id": "C5.1.3", "t": "Apuração de atos e fatos com indícios de ilegalidade ou irregularidade como competência do sistema de controle interno", "obs": "↔ FAG1"}, {"id": "C5.1.4", "t": "Finalidades e diferenças entre as três formas de atuação da SFC (avaliação, consultoria e apuração)", "obs": ""}, {"id": "C5.1.5", "t": "Relação com a gestão, correição e avaliação de políticas", "obs": ""}, {"id": "C5.1.6", "t": "Independência, objetividade, diligência e ceticismo", "obs": ""}, {"id": "C5.1.7", "t": "Modelo das três linhas: papéis de gestão, supervisão e auditoria", "obs": ""}]}, {"n": 2, "nome": "Ciclo do trabalho", "itens": [{"id": "C5.2.1", "t": "Planejamento, execução, comunicação e monitoramento", "obs": "↔ FAG1 (MOT)"}, {"id": "C5.2.2", "t": "Finalidade de objetivos, escopo, critérios e perguntas", "obs": ""}, {"id": "C5.2.3", "t": "Priorização por risco, materialidade e relevância social (conceitual)", "obs": ""}, {"id": "C5.2.4", "t": "Adequação do trabalho às finalidades de avaliação, consultoria ou apuração", "obs": ""}, {"id": "C5.2.5", "t": "Apoio à melhoria da gestão preservando autonomia técnica e responsabilidades dos gestores", "obs": ""}]}, {"n": 3, "nome": "Evidência e conclusão", "itens": [{"id": "C5.3.1", "t": "Suficiência, adequação e confiabilidade da evidência", "obs": ""}, {"id": "C5.3.2", "t": "Noção de achado e de limitações", "obs": ""}, {"id": "C5.3.3", "t": "Distinção entre sinal de risco, evidência e conclusão", "obs": ""}, {"id": "C5.3.4", "t": "Necessidade de aprofundamento e proporcionalidade da afirmação", "obs": ""}]}, {"n": 4, "nome": "Comunicação e acompanhamento", "itens": [{"id": "C5.4.1", "t": "Clareza, contexto e utilidade dos resultados", "obs": ""}, {"id": "C5.4.2", "t": "Publicidade e proteção de pessoas e informações", "obs": ""}, {"id": "C5.4.3", "t": "Recomendações relacionadas a causas e riscos", "obs": ""}, {"id": "C5.4.4", "t": "Distinção entre plano de ação, implementação, resultado e benefício", "obs": ""}]}, {"n": 5, "nome": "Integração entre funções da CGU", "itens": [{"id": "C5.5.1", "t": "Denúncias e informações de ouvidoria e transparência como insumos de risco", "obs": "↔ CGU2"}, {"id": "C5.5.2", "t": "Achados como subsídios para admissibilidade correcional e responsabilização de entes privados", "obs": ""}, {"id": "C5.5.3", "t": "Resultados do controle como insumos de integridade e melhoria de serviços", "obs": ""}, {"id": "C5.5.4", "t": "Compartilhamento lícito, devolutivas e proteção", "obs": ""}]}]}, {"id": "T1", "nome": "Redes, Sistemas e Plataformas de Dados", "prova": "P3", "nota": "", "topicos": [{"n": 1, "nome": "Redes e comunicação", "itens": [{"id": "T1.1.1", "t": "Modelos TCP/IP e OSI", "obs": "novo em relação a 2021", "star": 1, "novo": 1}, {"id": "T1.1.2", "t": "IPv4 e IPv6", "obs": "", "star": 1}, {"id": "T1.1.3", "t": "DNS e DHCP", "obs": "", "star": 1}, {"id": "T1.1.4", "t": "Roteamento e segmentação (VLANs, sub-redes)", "obs": "", "star": 1}, {"id": "T1.1.5", "t": "Balanceamento e qualidade de serviço (QoS)", "obs": "", "star": 1}, {"id": "T1.1.6", "t": "Redes locais, sem fio e de longa distância", "obs": "", "star": 1}, {"id": "T1.1.7", "t": "Comunicação entre nuvem e ambiente local (VPN, interconexão dedicada)", "obs": "↔ IT2"}, {"id": "T1.1.8", "t": "Diagnóstico de falhas, latência e gargalos", "obs": "↔ IT8", "star": 1}]}, {"n": 2, "nome": "Sistemas e diretórios", "itens": [{"id": "T1.2.1", "t": "Administração de Windows e Linux", "obs": "", "star": 1}, {"id": "T1.2.2", "t": "Processos, serviços, permissões, usuários, grupos e diretórios (inclui serviços de diretório, ex.: AD/LDAP)", "obs": ""}, {"id": "T1.2.3", "t": "Gestão de configuração, atualizações e correções", "obs": "↔ IT5 (configuração)"}, {"id": "T1.2.4", "t": "Servidores de aplicação e serviços web", "obs": ""}, {"id": "T1.2.5", "t": "Diagnóstico e conformidade de ambientes", "obs": ""}]}, {"n": 3, "nome": "Armazenamento", "itens": [{"id": "T1.3.1", "t": "Armazenamento em bloco, arquivo e objeto", "obs": "local e em nuvem — novo", "novo": 1}, {"id": "T1.3.2", "t": "Capacidade, desempenho, disponibilidade e proteção (RAID, snapshots, replicação)", "obs": ""}, {"id": "T1.3.3", "t": "Segregação de acesso, retenção e descarte", "obs": ""}, {"id": "T1.3.4", "t": "Escolhas de arquitetura conforme requisitos das cargas de trabalho", "obs": "↔ IT1 (workloads)"}]}, {"n": 4, "nome": "Plataformas de bancos de dados", "itens": [{"id": "T1.4.1", "t": "Bancos relacionais", "obs": "↔ BD1"}, {"id": "T1.4.2", "t": "Bancos documentais e chave-valor", "obs": "↔ BD2"}, {"id": "T1.4.3", "t": "Cache e busca textual", "obs": "↔ DS6 (Redis); busca textual é novo", "novo": 1}, {"id": "T1.4.4", "t": "Transações, concorrência, logs, replicação e disponibilidade", "obs": "↔ BD1"}, {"id": "T1.4.5", "t": "Índices e planos de execução", "obs": "↔ BD1 (otimização de consultas)"}, {"id": "T1.4.6", "t": "Diagnóstico de desempenho, segurança e recuperação de dados", "obs": "↔ BD1"}]}, {"n": 5, "nome": "SQL e sustentação de dados", "itens": [{"id": "T1.5.1", "t": "SQL para definição (DDL) e manipulação (DML) de dados, controle de acesso (DCL) e transações", "obs": "↔ BD1"}, {"id": "T1.5.2", "t": "Consultas com filtros, junções e agregações", "obs": "↔ BD1"}, {"id": "T1.5.3", "t": "Privilégios, bloqueios, consistência e efeitos operacionais", "obs": ""}, {"id": "T1.5.4", "t": "Integrações e dependências de serviços de dados", "obs": ""}]}]}, {"id": "T2", "nome": "Computação em Nuvem, Virtualização e Automação", "prova": "P3", "nota": "", "topicos": [{"n": 1, "nome": "Modelos e arquitetura de nuvem", "itens": [{"id": "T2.1.1", "t": "IaaS, PaaS e SaaS", "obs": "↔ IT1"}, {"id": "T2.1.2", "t": "Modelos de implantação (pública, privada, híbrida, comunitária)", "obs": "↔ IT1"}, {"id": "T2.1.3", "t": "Responsabilidade compartilhada", "obs": "↔ IT2"}, {"id": "T2.1.4", "t": "Redes virtuais e integração com ambiente local", "obs": ""}, {"id": "T2.1.5", "t": "Elasticidade, escalabilidade e portabilidade", "obs": ""}, {"id": "T2.1.6", "t": "Dependência entre serviços e requisitos de segurança", "obs": ""}]}, {"n": 2, "nome": "Virtualização e contêineres", "itens": [{"id": "T2.2.1", "t": "Máquinas virtuais, contêineres e orquestração", "obs": "↔ IT3, DS4 (Docker/Kubernetes)"}, {"id": "T2.2.2", "t": "Isolamento, persistência, redes e recursos", "obs": ""}, {"id": "T2.2.3", "t": "Escalonamento, atualização e recuperação", "obs": ""}, {"id": "T2.2.4", "t": "Segurança e disponibilidade de ambientes virtualizados e conteinerizados", "obs": ""}]}, {"n": 3, "nome": "Arquiteturas de serviços", "itens": [{"id": "T2.3.1", "t": "Balanceamento e serviços gerenciados", "obs": ""}, {"id": "T2.3.2", "t": "Processamento orientado a eventos e serverless", "obs": "↔ IT2"}, {"id": "T2.3.3", "t": "Filas e comunicação entre serviços", "obs": "↔ DS4 (integração, API REST)"}, {"id": "T2.3.4", "t": "Tolerância a falhas e continuidade", "obs": ""}, {"id": "T2.3.5", "t": "Escolhas entre operação própria e serviços contratados", "obs": ""}]}, {"n": 4, "nome": "Infraestrutura como código", "itens": [{"id": "T2.4.1", "t": "Versionamento, gestão de configuração e automação", "obs": "↔ IT4, DS8 (Git)"}, {"id": "T2.4.2", "t": "Estados desejados, repetibilidade e idempotência", "obs": "↔ IT4 (Terraform)"}, {"id": "T2.4.3", "t": "Segregação de ambientes e proteção de credenciais", "obs": ""}, {"id": "T2.4.4", "t": "Integração e entrega contínuas (CI/CD)", "obs": "↔ IT3 (DevOps)"}, {"id": "T2.4.5", "t": "Validação de mudanças e reversão (rollback)", "obs": ""}]}, {"n": 5, "nome": "Migração e modernização", "itens": [{"id": "T2.5.1", "t": "Dependências, compatibilidade e portabilidade", "obs": "↔ IT2"}, {"id": "T2.5.2", "t": "Transição entre ambientes locais e de nuvem", "obs": "↔ IT2 (estratégias de migração)"}, {"id": "T2.5.3", "t": "Transferência e sincronização de dados", "obs": ""}, {"id": "T2.5.4", "t": "Testes, continuidade e reversibilidade", "obs": ""}, {"id": "T2.5.5", "t": "Dimensionamento e custos da migração e da operação", "obs": ""}]}]}, {"id": "T3", "nome": "Cibersegurança, Privacidade e Continuidade de Serviços", "prova": "P3", "nota": "", "topicos": [{"n": 1, "nome": "Riscos e arquitetura de segurança", "itens": [{"id": "T3.1.1", "t": "Ameaças, vulnerabilidades e superfícies de ataque", "obs": "↔ SI4"}, {"id": "T3.1.2", "t": "Defesa em profundidade", "obs": ""}, {"id": "T3.1.3", "t": "Zero trust", "obs": "↔ SI2"}, {"id": "T3.1.4", "t": "Segmentação", "obs": "", "star": 1}, {"id": "T3.1.5", "t": "Firewall e prevenção de intrusões (IPS)", "obs": "", "star": 1}, {"id": "T3.1.6", "t": "WAF e proteção contra negação de serviço (DDoS)", "obs": ""}, {"id": "T3.1.7", "t": "Acesso remoto seguro (VPN, ZTNA)", "obs": ""}, {"id": "T3.1.8", "t": "Controles em ambientes locais e de nuvem", "obs": ""}]}, {"n": 2, "nome": "Identidades e proteção criptográfica", "itens": [{"id": "T3.2.1", "t": "Autenticação, autorização e identidades", "obs": "↔ SI1 (gestão de identidade e acesso)"}, {"id": "T3.2.2", "t": "Acessos privilegiados (PAM)", "obs": ""}, {"id": "T3.2.3", "t": "Múltiplos fatores (MFA) e autenticação única (SSO)", "obs": ""}, {"id": "T3.2.4", "t": "Menor privilégio e segregação de funções", "obs": ""}, {"id": "T3.2.5", "t": "Federação de identidades (SAML, OpenID Connect)", "obs": ""}, {"id": "T3.2.6", "t": "Proteção de segredos, chaves e certificados", "obs": "↔ SI6"}, {"id": "T3.2.7", "t": "Assinatura digital", "obs": "↔ SI6"}, {"id": "T3.2.8", "t": "Criptografia em trânsito e em repouso", "obs": ""}]}, {"n": 3, "nome": "Vulnerabilidades e operação de segurança", "itens": [{"id": "T3.3.1", "t": "Inventário e exposição de ativos", "obs": "↔ SI3 (CIS Controls)"}, {"id": "T3.3.2", "t": "Gestão de vulnerabilidades, correções e testes autorizados", "obs": "↔ SI4, SI5"}, {"id": "T3.3.3", "t": "Proteção de endpoints", "obs": "↔ SI4"}, {"id": "T3.3.4", "t": "Correlação de eventos, centros de operação de segurança (SOC/SIEM) e inteligência de ameaças", "obs": "↔ SI3"}, {"id": "T3.3.5", "t": "Prevenção de vazamento de dados (DLP)", "obs": "↔ SI5"}]}, {"n": 4, "nome": "Resposta a incidentes", "itens": [{"id": "T3.4.1", "t": "Detecção, análise, contenção, recuperação e comunicação", "obs": "↔ SI7"}, {"id": "T3.4.2", "t": "Responsabilidades e coordenação (equipes de tratamento de incidentes)", "obs": "↔ SI8"}, {"id": "T3.4.3", "t": "Preservação de evidências, registros e trilhas", "obs": ""}, {"id": "T3.4.4", "t": "Análise de causas e melhoria dos controles", "obs": ""}, {"id": "T3.4.5", "t": "Incidentes envolvendo serviços de dados e IA", "obs": "novo", "novo": 1}]}, {"n": 5, "nome": "Privacidade e proteção operacional", "itens": [{"id": "T3.5.1", "t": "Minimização, segregação e controle de acesso", "obs": "↔ DA13 (LGPD)"}, {"id": "T3.5.2", "t": "Proteção de dados pessoais em armazenamento, cópias, registros e integrações", "obs": ""}, {"id": "T3.5.3", "t": "Retenção e descarte", "obs": ""}, {"id": "T3.5.4", "t": "Pseudonimização e riscos de reidentificação", "obs": "↔ C2.2"}, {"id": "T3.5.5", "t": "Proteção de contêineres e interfaces com serviços de IA", "obs": "novo", "novo": 1}]}, {"n": 6, "nome": "Continuidade e recuperação", "itens": [{"id": "T3.6.1", "t": "Análise de impacto (BIA), redundância e recuperação de desastres", "obs": "↔ SI1 (continuidade do negócio)"}, {"id": "T3.6.2", "t": "Cópias de segurança de ambientes locais, nuvem e serviços contratados", "obs": ""}, {"id": "T3.6.3", "t": "Retenção, isolamento, proteção contra alteração indevida (imutabilidade) e testes de restauração", "obs": ""}, {"id": "T3.6.4", "t": "Objetivos de tempo (RTO) e de ponto (RPO) de recuperação", "obs": ""}, {"id": "T3.6.5", "t": "Dependência de serviços e fornecedores críticos", "obs": ""}]}]}, {"id": "T4", "nome": "Operação, Governança e Gestão de Serviços Digitais", "prova": "P3", "nota": "", "topicos": [{"n": 1, "nome": "Confiabilidade e observabilidade", "itens": [{"id": "T4.1.1", "t": "Logs, métricas e rastreamento distribuído", "obs": "↔ IT8"}, {"id": "T4.1.2", "t": "Indicadores e objetivos de serviço (SLI, SLO, SLA)", "obs": ""}, {"id": "T4.1.3", "t": "Capacidade, latência, disponibilidade e tolerância a falhas", "obs": ""}, {"id": "T4.1.4", "t": "Monitoramento de aplicações, infraestrutura, pipelines e inferência (IA)", "obs": "↔ IT8"}, {"id": "T4.1.5", "t": "Correlação de eventos e diagnóstico", "obs": "", "star": 1}]}, {"n": 2, "nome": "Capacidade, custos e infraestrutura de IA — novo", "itens": [{"id": "T4.2.1", "t": "Dimensionamento e otimização de processamento, memória, armazenamento e aceleradores (GPU)", "obs": ""}, {"id": "T4.2.2", "t": "Disponibilidade e segurança de serviços de modelos e agentes", "obs": ""}, {"id": "T4.2.3", "t": "Limites de consumo, latência e isolamento de cargas", "obs": ""}, {"id": "T4.2.4", "t": "Custos de nuvem, cotas, alocação e gestão financeira do consumo (FinOps)", "obs": ""}, {"id": "T4.2.5", "t": "Efeitos da degradação sobre os usuários", "obs": ""}]}, {"n": 3, "nome": "Gestão de serviços e mudanças", "itens": [{"id": "T4.3.1", "t": "Demandas, capacidade e níveis de serviço", "obs": "↔ IT5"}, {"id": "T4.3.2", "t": "Incidentes, problemas, configuração, mudanças e reversão", "obs": "↔ IT5"}, {"id": "T4.3.3", "t": "Integração entre desenvolvimento, operação e segurança (DevSecOps)", "obs": "↔ IT3"}, {"id": "T4.3.4", "t": "Gestão de fluxo com Scrum e Kanban", "obs": "↔ DS3"}, {"id": "T4.3.5", "t": "Acompanhamento de entregas e melhoria contínua", "obs": ""}]}, {"n": 4, "nome": "Governança e controle", "itens": [{"id": "T4.4.1", "t": "Alinhamento institucional, responsabilidades, portfólio, prioridades e indicadores", "obs": ""}, {"id": "T4.4.2", "t": "PDTIC, plano de transformação digital e plano de dados abertos nos requisitos de serviços e infraestrutura", "obs": "novo", "novo": 1}, {"id": "T4.4.3", "t": "Gestão de riscos", "obs": "↔ SI1"}, {"id": "T4.4.4", "t": "Evidências de desempenho e de efetividade de controles", "obs": "↔ C1.4, C5.3"}, {"id": "T4.4.5", "t": "Articulação entre gestão, fiscalização, segurança e auditoria", "obs": ""}]}, {"n": 5, "nome": "Contratações e gestão de fornecedores", "itens": [{"id": "T4.5.1", "t": "Necessidade, estudo técnico preliminar (ETP) e termo de referência (TR)", "obs": "↔ IT6"}, {"id": "T4.5.2", "t": "Viabilidade, capacidade e custo total de propriedade (TCO)", "obs": ""}, {"id": "T4.5.3", "t": "Pesquisa de preços e comparação de alternativas", "obs": ""}, {"id": "T4.5.4", "t": "Níveis de serviço e critérios de aceitação", "obs": "↔ IT6"}, {"id": "T4.5.5", "t": "Fiscalização, pagamento e verificação de entregas", "obs": "↔ IT6"}, {"id": "T4.5.6", "t": "Portabilidade, acesso a dados, continuidade, dependência tecnológica (lock-in) e plano de saída", "obs": ""}]}]}];
+const PROVA = {P1:{nome:"Básicos",itens:40,peso:1},P2:{nome:"Complementares",itens:40,peso:1},P3:{nome:"Específicos",itens:90,peso:2}};
+const DIAS = ["dom","seg","ter","qua","qui","sex","sab"];
+const DIAS_N = {seg:"Segunda",ter:"Terça",qua:"Quarta",qui:"Quinta",sex:"Sexta",sab:"Sábado",dom:"Domingo"};
+const ORDEM_DIAS = ["seg","ter","qua","qui","sex","sab","dom"];
+const CORES = ["#2b54c9","#1f8a5b","#b7791f","#c2413a","#7a4cc2","#0f8a9d","#a8558a","#5b6b2f","#3d6fa8","#9a5b2b","#2f7f6e","#8a3f5f","#55607a"];
+
+// índices
+const DISC = {}, ITEM = {}, ALL_ITEMS = [];
+EDITAL.forEach((d,i)=>{d.cor=CORES[i%CORES.length];d.itens=[];DISC[d.id]=d;
+  d.topicos.forEach(t=>t.itens.forEach(it=>{it.disc=d.id;it.top=t.nome;ITEM[it.id]=it;d.itens.push(it);ALL_ITEMS.push(it);}));});
+
+function defaultCfg(){
+  const q={}; EDITAL.forEach(d=>{const n=EDITAL.filter(x=>x.prova===d.prova).length;q[d.id]=Math.round(PROVA[d.prova].itens/n*10)/10;});
+  return {prova:"",rev:[1,7,30],horas:{seg:3,ter:4,qua:4,qui:3,sex:3,sab:4,dom:4},q};
+}
+let S = {levels:{},revDone:{},cfg:defaultCfg(),sessions:[]};
+
+// ---------- armazenamento ----------
+const Store = {mode:"local",db:null,base:null,stateRef:null,sessCol:null,timer:null,writing:false,dirty:false};
+const LS="cgu3-estudos";
+function lsLoad(){try{const v=JSON.parse(localStorage.getItem(LS)||"null");if(v)applyState(v,true);}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+function applyState(v,withSessions){
+  if(v.levels)S.levels=v.levels; if(v.revDone)S.revDone=v.revDone;
+  if(v.cfg)S.cfg=Object.assign(defaultCfg(),v.cfg,{q:Object.assign(defaultCfg().q,v.cfg.q||{}),horas:Object.assign(defaultCfg().horas,v.cfg.horas||{})});
+  if(withSessions&&Array.isArray(v.sessions))S.sessions=v.sessions;
+}
+function saveState(){
+  if(Store.mode==="local"){lsSave();return;}
+  Store.dirty=true; clearTimeout(Store.timer); Store.timer=setTimeout(flushState,700);
+}
+async function flushState(){
+  if(Store.writing||!Store.dirty)return; Store.writing=true; Store.dirty=false;
+  try{await Store.stateRef.set({levels:S.levels,revDone:S.revDone,cfg:S.cfg,updated:Date.now()});}
+  catch(e){toast("Não consegui salvar agora. Tento de novo na próxima alteração.");Store.dirty=true;}
+  Store.writing=false; if(Store.dirty)flushState();
+}
+async function addSession(s){
+  if(Store.mode==="local"){S.sessions.push(s);lsSave();render();return;}
+  S.sessions.push(s); render();
+  try{await Store.sessCol.doc(s.id).set(s);}catch(e){toast("Sessão não foi salva na conta: "+(e.code||"erro"));}
+}
+async function delSession(id){
+  S.sessions=S.sessions.filter(x=>x.id!==id); render();
+  if(Store.mode==="local"){lsSave();return;}
+  try{await Store.sessCol.doc(id).delete();}catch(e){toast("Não consegui apagar na conta.");}
+}
+function setSync(on,txt){document.getElementById("syncDot").classList.toggle("on",on);document.getElementById("syncTxt").textContent=txt;}
+
+async function initStore(){
+  lsLoad(); render();
+  setSync(false,"Salvo neste navegador");
+  if(!window.claude||!window.claude.use)return;
+  try{
+    const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+    if(!db||!user)return;
+    const uid=await user.id(); if(!uid)return;
+    Store.db=db; Store.base="data/users/"+uid;
+    Store.stateRef=db.doc(Store.base+"/state");
+    Store.sessCol=Store.stateRef.collection("sessions");
+    const snap=await Store.stateRef.get();
+    if(!snap.exists){
+      // primeira vez na conta: leva o que houver no navegador
+      await Store.stateRef.set({levels:S.levels,revDone:S.revDone,cfg:S.cfg,updated:Date.now()});
+      for(const s of S.sessions){await Store.sessCol.doc(s.id).set(s);}
+    }
+    Store.mode="db"; setSync(true,"Sincronizado na sua conta");
+    Store.stateRef.onSnapshot(sn=>{
+      if(!sn.exists||sn.metadata.hasPendingWrites||Store.dirty||Store.writing)return;
+      applyState(sn.data(),false); render();
+    },()=>setSync(false,"Sincronização interrompida"));
+    Store.sessCol.onSnapshot(qs=>{
+      S.sessions=qs.docs.map(d=>Object.assign({},d.data())); render();
+    },()=>setSync(false,"Sincronização interrompida"));
+  }catch(e){setSync(false,"Salvo neste navegador");}
+}
+
+// ---------- cálculos ----------
+const lv=id=>S.levels[id]||0;
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);};
+const hoje=()=>iso(new Date());
+const addDias=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d);};
+const fmtData=s=>{const d=new Date(s+"T12:00:00");return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short"});};
+function inicioSemana(){const d=new Date();const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return iso(d);}
+function dominio(d){const n=d.itens.length;let s=0;d.itens.forEach(it=>s+=lv(it.id));return n?s/(3*n):0;}
+function contaNiveis(itens){const c=[0,0,0,0];itens.forEach(it=>c[lv(it.id)]++);return c;}
+function prioridades(){
+  const pts=EDITAL.map(d=>(+S.cfg.q[d.id]||0)*PROVA[d.prova].peso);
+  const totP=pts.reduce((a,b)=>a+b,0)||1;
+  const totI=ALL_ITEMS.length;
+  const rows=EDITAL.map((d,i)=>{const imp=pts[i]/totP,tam=d.itens.length/totI,dom=dominio(d);return {d,pts:pts[i],imp,tam,dom,k:imp*tam*(1-dom)};});
+  const tk=rows.reduce((a,r)=>a+r.k,0)||1; rows.forEach(r=>r.rel=r.k/tk); return rows;
+}
+function gerarCiclo(){
+  const rows=prioridades();
+  const total=ORDEM_DIAS.reduce((a,k)=>a+(+S.cfg.horas[k]||0),0);
+  // maior resto
+  let alloc=rows.map(r=>({d:r.d,exact:r.rel*total}));
+  alloc.forEach(a=>{a.n=Math.floor(a.exact);a.rest=a.exact-a.n;});
+  let falta=total-alloc.reduce((s,a)=>s+a.n,0);
+  [...alloc].sort((a,b)=>b.rest-a.rest).slice(0,Math.max(0,falta)).forEach(a=>a.n++);
+  const rem={}; alloc.forEach(a=>rem[a.d.id]=a.n);
+  const sem={}; let prev=null;
+  ORDEM_DIAS.forEach(k=>{
+    sem[k]=[]; const usados=new Set();
+    for(let h=0;h<(+S.cfg.horas[k]||0);h++){
+      const cand=Object.keys(rem).filter(id=>rem[id]>0).sort((a,b)=>rem[b]-rem[a]);
+      if(!cand.length)break;
+      let pick=cand.find(id=>!usados.has(id)&&id!==prev)||cand.find(id=>id!==prev)||cand[0];
+      rem[pick]--; usados.add(pick); sem[k].push(pick); prev=pick;
+    }
+  });
+  return {sem,total,rows};
+}
+function sugestao(discId){
+  const d=DISC[discId]; const its=[...d.itens].sort((a,b)=>lv(a.id)-lv(b.id)||(b.star||0)-(a.star||0));
+  return its[0];
+}
+function revisoes(){
+  const first={};
+  S.sessions.forEach(s=>{if(s.item&&ITEM[s.item]&&(!first[s.item]||s.data<first[s.item]))first[s.item]=s.data;});
+  const out=[];
+  Object.entries(first).forEach(([item,dt])=>S.cfg.rev.forEach(n=>{const key=item+"@"+n;out.push({key,item,n,due:addDias(dt,n),done:!!S.revDone[key]});}));
+  return out.sort((a,b)=>a.due<b.due?-1:1);
+}
+function resumoQuestoes(sessoes){let q=0,a=0;sessoes.forEach(s=>{q+=+s.q||0;a+=+s.a||0;});return {q,a,pct:q?a/q:null,liq:q?(a-(q-a))/q:null};}
+const pct=v=>v==null?"–":(v*100).toFixed(0)+"%";
+
+// ---------- render ----------
+function render(){renderHoje();renderEdital();renderRegistro();renderCiclo();renderAjustes();}
+
+function renderHoje(){
+  const h=hoje(); const dk=DIAS[new Date().getDay()];
+  document.getElementById("hojeTitulo").textContent=DIAS_N[dk]+", "+new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"});
+  const meta=(+S.cfg.horas[dk]||0)*60;
+  const minHoje=S.sessions.filter(s=>s.data===h).reduce((a,s)=>a+(+s.min||0),0);
+  let lede=`Meta de hoje: ${meta/60} h · estudado: ${(minHoje/60).toFixed(1).replace(".",",")} h.`;
+  if(S.cfg.prova){const dias=Math.round((new Date(S.cfg.prova+"T12:00:00")-new Date(h+"T12:00:00"))/864e5);if(dias>=0)lede+=` Faltam ${dias} dias para a prova.`;}
+  else lede+=" Defina a data da prova em Ajustes para ver a contagem regressiva.";
+  document.getElementById("hojeLede").textContent=lede;
+
+  const c=contaNiveis(ALL_ITEMS); const prog=(c[1]+2*c[2]+3*c[3])/(3*ALL_ITEMS.length);
+  const ini=inicioSemana(); const semSess=S.sessions.filter(s=>s.data>=ini);
+  const minSem=semSess.reduce((a,s)=>a+(+s.min||0),0); const metaSem=ORDEM_DIAS.reduce((a,k)=>a+(+S.cfg.horas[k]||0),0);
+  const r7=resumoQuestoes(S.sessions.filter(s=>s.data>=addDias(h,-6)));
+  const revs=revisoes(); const pend=revs.filter(r=>!r.done&&r.due<=h).length;
+  document.getElementById("stats").innerHTML=[
+    [pct(prog),"domínio do edital"],
+    [`${c[0]}`,"itens no nível 0"],
+    [`${(minSem/60).toFixed(1).replace(".",",")}/${metaSem} h`,"horas na semana"],
+    [pct(r7.pct),"acertos em 7 dias"],
+    [r7.liq==null?"–":((r7.liq*100).toFixed(0)+"%"),"nota líquida (C/E)"],
+    [String(pend),"revisões pendentes"]
+  ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+  const {sem}=gerarCiclo(); const slots=sem[dk]||[];
+  const feitos=new Set(S.sessions.filter(s=>s.data===h).map(s=>s.disc));
+  document.getElementById("slotsHoje").innerHTML=slots.length?slots.map((id,i)=>{
+    const d=DISC[id], it=sugestao(id), ok=feitos.has(id);
+    return `<div class="slot"><span class="h">${i+1}ª hora</span><div class="t"><b><span class="num" style="color:${d.cor}">${d.id}</span> ${esc(d.nome)}</b><small>Sugestão: ${esc(it.t)} <span class="pill">nível ${lv(it.id)}</span>${it.star?' <span class="pill star">★</span>':''}</small></div>
+    <button class="btn sm ${ok?'ghost':''}" data-reg="${id}" data-item="${it.id}">${ok?'Registrado':'Registrar'}</button></div>`;}).join(""):`<p class="empty">Nenhuma hora prevista para hoje. Ajuste em Prioridades e ciclo.</p>`;
+
+  const vis=revs.filter(r=>!r.done&&r.due<=addDias(h,3)).slice(0,12);
+  document.getElementById("revs").innerHTML=vis.length?vis.map(r=>{const it=ITEM[r.item];const atras=r.due<h,hj=r.due===h;
+    return `<label class="rev"><input type="checkbox" data-rev="${r.key}"><div>${esc(it.t)}<small><span class="num">${it.id}</span> · revisão de ${r.n} dia${r.n>1?'s':''} · ${hj?'<span class="mark">hoje</span>':atras?'<span class="pill due">atrasada · '+fmtData(r.due)+'</span>':fmtData(r.due)}</small></div></label>`;}).join("")
+    :`<p class="empty">Nada para revisar nos próximos dias. Revisões aparecem aqui quando você registra um estudo ligado a um item do edital.</p>`;
+
+  document.getElementById("discBars").innerHTML=EDITAL.map(d=>{const c=contaNiveis(d.itens),n=d.itens.length;
+    return `<div class="disc-row"><span class="id">${d.id}</span><div style="min-width:0"><div class="nm" title="${esc(d.nome)}">${esc(d.nome)}</div><div class="bar">${[1,2,3].map(l=>`<i style="width:${c[l]/n*100}%;background:var(--l${l})"></i>`).join("")}</div></div><span class="num" style="text-align:right;font-size:.8rem">${pct(dominio(d))}</span></div>`;}).join("");
+}
+
+function renderEdital(){
+  const busca=document.getElementById("fBusca").value.trim().toLowerCase();
+  const prova=document.getElementById("fProva").value, niv=document.getElementById("fNivel").value, star=document.getElementById("fStar").checked;
+  const passa=it=>{const l=lv(it.id);
+    if(star&&!it.star)return false;
+    if(niv==="0"&&l!==0)return false; if(niv==="lt2"&&l>=2)return false; if(niv==="lt3"&&l>=3)return false; if(niv==="3"&&l!==3)return false;
+    if(busca&&!(it.t+" "+it.obs+" "+it.id+" "+it.top).toLowerCase().includes(busca))return false; return true;};
+  const filtrando=!!(busca||niv||star);
+  const open=new Set([...document.querySelectorAll("details.disc[open]")].map(x=>x.dataset.d));
+  let html="";
+  EDITAL.filter(d=>!prova||d.prova===prova).forEach(d=>{
+    const its=d.itens.filter(passa); if(!its.length)return;
+    const c=contaNiveis(d.itens),n=d.itens.length;
+    html+=`<details class="disc" data-d="${d.id}" ${(filtrando||open.has(d.id))?"open":""}><summary><span class="dn"><span class="id">${d.id}</span>${esc(d.nome)}</span><span class="meta">${d.prova} · ${its.length}${filtrando?" de "+n:""} itens · ${pct(dominio(d))}</span><div class="bar">${[1,2,3].map(l=>`<i style="width:${c[l]/n*100}%;background:var(--l${l})"></i>`).join("")}</div></summary>`;
+    if(d.nota)html+=`<div class="nota">${esc(d.nota)}</div>`;
+    d.topicos.forEach(t=>{const ti=t.itens.filter(passa);if(!ti.length)return;
+      html+=`<div class="topico"><h4>${t.n}. ${esc(t.nome)}</h4>`+ti.map(it=>`<div class="item"><div class="tx"><span class="iid">${it.id}</span>${esc(it.t)} ${it.star?'<span class="pill star">★</span>':''} ${it.novo?'<span class="pill novo">novo</span>':''}${it.obs?`<small>${esc(it.obs)}</small>`:""}</div><div class="lv" role="group" aria-label="Nível">${[0,1,2,3].map(l=>`<button type="button" data-it="${it.id}" data-l="${l}" aria-pressed="${lv(it.id)===l}">${l}</button>`).join("")}</div></div>`).join("")+`</div>`;});
+    html+=`</details>`;
+  });
+  document.getElementById("editalList").innerHTML=html||`<p class="empty">Nenhum item com esses filtros.</p>`;
+}
+
+function preencheItens(discId,sel){
+  const s=document.getElementById("sItem");
+  s.innerHTML=`<option value="">— sem item específico —</option>`+(discId?DISC[discId].topicos.map(t=>`<optgroup label="${esc(t.n+'. '+t.nome)}">`+t.itens.map(it=>`<option value="${it.id}">${it.id} · ${esc(it.t.slice(0,90))} (nível ${lv(it.id)})</option>`).join("")+`</optgroup>`).join(""):"");
+  if(sel)s.value=sel;
+}
+function renderRegistro(){
+  const sd=document.getElementById("sDisc");
+  if(!sd.options.length){sd.innerHTML=`<option value="">Escolha…</option>`+EDITAL.map(d=>`<option value="${d.id}">${d.id} · ${esc(d.nome)}</option>`).join("");document.getElementById("sData").value=hoje();preencheItens("");}
+  calcForm();
+  const ini=inicioSemana(); const sem=S.sessions.filter(s=>s.data>=ini);
+  const linhas=EDITAL.map(d=>{const ss=sem.filter(s=>s.disc===d.id);if(!ss.length)return"";const r=resumoQuestoes(ss);const min=ss.reduce((a,s)=>a+(+s.min||0),0);const pg=ss.reduce((a,s)=>a+pags(s),0);
+    return `<tr><td><span class="num">${d.id}</span> ${esc(d.nome)}</td><td class="n">${(min/60).toFixed(1).replace(".",",")}</td><td class="n">${pg||"–"}</td><td class="n">${r.q||"–"}</td><td class="n">${pct(r.pct)}</td><td class="n">${r.liq==null?"–":(r.liq*100).toFixed(0)+"%"}</td></tr>`;}).join("");
+  document.getElementById("tSemana").innerHTML=linhas?`<thead><tr><th>Disciplina</th><th class="n">Horas</th><th class="n">Páginas</th><th class="n">Questões</th><th class="n">Acertos</th><th class="n">Líquida</th></tr></thead><tbody>${linhas}</tbody>`:`<tbody><tr><td class="empty">Nenhuma sessão desde segunda-feira.</td></tr></tbody>`;
+  const ult=[...S.sessions].sort((a,b)=>b.data.localeCompare(a.data)||b.ts-a.ts).slice(0,40);
+  document.getElementById("tSessoes").innerHTML=ult.length?`<thead><tr><th>Data</th><th>Disciplina / item</th><th class="n">Min</th><th class="n">Pág.</th><th class="n">Q</th><th class="n">%</th><th></th></tr></thead><tbody>`+ult.map(s=>`<tr><td class="num">${fmtData(s.data)}</td><td><span class="num">${s.disc}</span> ${s.item&&ITEM[s.item]?esc(ITEM[s.item].t.slice(0,70)):esc(DISC[s.disc]?DISC[s.disc].nome:"")}${s.mat?`<br><span class="hint">${esc(s.mat)}</span>`:""}</td><td class="n">${s.min||"–"}</td><td class="n">${pags(s)||"–"}</td><td class="n">${s.q||"–"}</td><td class="n">${s.q?pct(s.a/s.q):"–"}</td><td><button class="btn sm ghost danger" data-del="${s.id}" aria-label="Apagar sessão">Apagar</button></td></tr>`).join("")+`</tbody>`
+    :`<tbody><tr><td class="empty">Ainda não há sessões. Registre a primeira acima ou pelo botão “Registrar” no ciclo de hoje.</td></tr></tbody>`;
+}
+const pags=s=>(s.pi!==""&&s.pf!==""&&s.pi!=null&&s.pf!=null&&+s.pf>=+s.pi)?(+s.pf-+s.pi+1):0;
+function calcForm(){
+  const pi=document.getElementById("sPi").value,pf=document.getElementById("sPf").value,q=+document.getElementById("sQ").value||0,a=+document.getElementById("sA").value||0,min=+document.getElementById("sMin").value||0;
+  const p=pags({pi,pf}); const parts=[];
+  if(p){parts.push(`${p} páginas`); if(min)parts.push(`${(p/(min/60)).toFixed(1).replace(".",",")} pág/h`);}
+  if(q){parts.push(`${pct(a/q)} de acertos`);parts.push(`nota líquida Cebraspe ${((a-(q-a))/q*100).toFixed(0)}% (cada erro anula um acerto)`);}
+  document.getElementById("sCalc").textContent=parts.join(" · ");
+}
+
+function renderCiclo(){
+  const {sem,total,rows}=gerarCiclo();
+  document.getElementById("tPrior").innerHTML=`<thead><tr><th>Disciplina</th><th>Prova</th><th class="n">Questões</th><th class="n">Pontos</th><th class="n">Itens</th><th class="n">Domínio</th><th class="n">Prioridade</th><th class="n">h/semana</th></tr></thead><tbody>`+
+    [...rows].sort((a,b)=>b.rel-a.rel).map(r=>`<tr><td><span class="num" style="color:${r.d.cor}">${r.d.id}</span> ${esc(r.d.nome)}</td><td>${r.d.prova}</td><td class="n"><input class="q num" type="number" min="0" step="0.5" id="q-${r.d.id}" data-q="${r.d.id}" value="${S.cfg.q[r.d.id]}"></td><td class="n">${fmtN(r.pts)}</td><td class="n">${r.d.itens.length}</td><td class="n">${pct(r.dom)}</td><td class="n">${(r.rel*100).toFixed(1).replace(".",",")}%</td><td class="n">${(r.rel*total).toFixed(1).replace(".",",")}</td></tr>`).join("")+`</tbody>`;
+  const dk=DIAS[new Date().getDay()];
+  document.getElementById("cicloTotal").textContent=`· ${total} h na semana`;
+  document.getElementById("week").innerHTML=ORDEM_DIAS.map(k=>`<div class="day ${k===dk?'today':''}"><h4>${DIAS_N[k]}<input type="number" min="0" max="16" id="h-${k}" data-h="${k}" value="${S.cfg.horas[k]}" aria-label="Horas em ${DIAS_N[k]}" class="num"></h4>${sem[k].map((id,i)=>`<div class="blk" style="--c:${DISC[id].cor}"><b>${id}</b> ${esc(DISC[id].nome.length>42?DISC[id].nome.slice(0,40)+"…":DISC[id].nome)}</div>`).join("")||'<p class="hint">Descanso</p>'}</div>`).join("");
+}
+const fmtN=v=>Number.isInteger(v)?String(v):v.toFixed(1).replace(".",",");
+
+function renderAjustes(){
+  const p=document.getElementById("cProva"),r=document.getElementById("cRev");
+  if(document.activeElement!==p)p.value=S.cfg.prova||"";
+  if(document.activeElement!==r)r.value=S.cfg.rev.join(", ");
+}
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+let tt; function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600);}
+
+// ---------- eventos ----------
+function abrirTab(name){
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===name));
+  document.querySelectorAll("main>section").forEach(s=>s.hidden=s.id!==name);
+  try{localStorage.setItem(LS+"-tab",name);}catch(e){}
+}
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)abrirTab(b.dataset.tab);});
+
+document.addEventListener("click",e=>{
+  const l=e.target.closest(".lv button");
+  if(l){S.levels[l.dataset.it]=+l.dataset.l;if(!S.levels[l.dataset.it])delete S.levels[l.dataset.it];saveState();
+    l.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===l));renderHoje();renderCiclo();
+    const det=l.closest("details");if(det){const d=DISC[det.dataset.d],c=contaNiveis(d.itens),n=d.itens.length;det.querySelector("summary .bar").innerHTML=[1,2,3].map(x=>`<i style="width:${c[x]/n*100}%;background:var(--l${x})"></i>`).join("");}
+    return;}
+  const r=e.target.closest("[data-reg]");
+  if(r){abrirTab("registro");document.getElementById("sDisc").value=r.dataset.reg;preencheItens(r.dataset.reg,r.dataset.item);document.getElementById("sData").value=hoje();document.getElementById("sMin").focus();return;}
+  const d=e.target.closest("[data-del]");
+  if(d){if(d.dataset.armed){delSession(d.dataset.del);toast("Sessão apagada");}else{d.dataset.armed="1";d.textContent="Confirmar";setTimeout(()=>{if(d.isConnected){delete d.dataset.armed;d.textContent="Apagar";}},3000);}return;}
+});
+document.addEventListener("change",e=>{
+  const rv=e.target.closest("[data-rev]");
+  if(rv&&rv.checked){S.revDone[rv.dataset.rev]=1;saveState();toast("Revisão concluída");setTimeout(renderHoje,250);return;}
+  if(e.target.dataset.q){S.cfg.q[e.target.dataset.q]=Math.max(0,+e.target.value||0);saveState();renderCiclo();renderHoje();return;}
+  if(e.target.dataset.h){S.cfg.horas[e.target.dataset.h]=Math.max(0,Math.min(16,Math.round(+e.target.value||0)));saveState();renderCiclo();renderHoje();return;}
+});
+["fBusca","fProva","fNivel","fStar"].forEach(id=>document.getElementById(id).addEventListener("input",renderEdital));
+document.getElementById("sDisc").addEventListener("change",e=>preencheItens(e.target.value));
+["sPi","sPf","sQ","sA","sMin"].forEach(id=>document.getElementById(id).addEventListener("input",calcForm));
+document.getElementById("fSessao").addEventListener("submit",e=>{
+  e.preventDefault();
+  const g=id=>document.getElementById(id).value;
+  const q=+g("sQ")||0,a=+g("sA")||0;
+  if(a>q){toast("Acertos não podem passar do número de questões.");return;}
+  if(!g("sDisc")){toast("Escolha a disciplina.");return;}
+  const s={id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),data:g("sData")||hoje(),disc:g("sDisc"),item:g("sItem")||"",min:+g("sMin")||0,mat:g("sMat").trim(),pi:g("sPi"),pf:g("sPf"),q,a};
+  let subiu="";
+  if(s.item){const atual=lv(s.item);let novo=atual;if(atual<1)novo=1;if(q>0&&atual<2)novo=2;if(novo!==atual){S.levels[s.item]=novo;saveState();subiu=` Item foi para o nível ${novo}.`;}}
+  addSession(s);
+  ["sMat","sPi","sPf","sQ","sA"].forEach(id=>document.getElementById(id).value="");
+  calcForm(); toast("Sessão salva."+subiu);
+});
+document.getElementById("cProva").addEventListener("change",e=>{S.cfg.prova=e.target.value;saveState();renderHoje();});
+document.getElementById("cRev").addEventListener("change",e=>{const v=e.target.value.split(/[,; ]+/).map(Number).filter(n=>n>0&&n<400);if(v.length){S.cfg.rev=[...new Set(v)].sort((a,b)=>a-b);saveState();renderHoje();toast("Intervalos de revisão atualizados");}renderAjustes();});
+
+document.getElementById("bExport").addEventListener("click",async()=>{
+  const data=JSON.stringify({app:"cgu3-estudos",versao:1,exportado:new Date().toISOString(),levels:S.levels,revDone:S.revDone,cfg:S.cfg,sessions:S.sessions},null,1);
+  const nome=`estudos-cgu-${hoje()}.json`;
+  try{const dl=await claude.use("downloads");if(dl){await dl.save({filename:nome,data});return;}}catch(e){if(e&&e.code==="declined")return;}
+  try{await navigator.clipboard.writeText(data);toast("Backup copiado para a área de transferência");}catch(e){toast("Não consegui exportar neste navegador.");}
+});
+document.getElementById("bImport").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+  rd.onload=()=>{let v;try{v=JSON.parse(rd.result);}catch(x){toast("Arquivo não é um JSON válido.");return;}
+    if(!v||v.app!=="cgu3-estudos"){toast("Esse arquivo não é um backup deste site.");return;}
+    const box=document.getElementById("importConfirm");
+    box.innerHTML=`<div class="confirm">Substituir seus dados por ${Object.keys(v.levels||{}).length} níveis e ${(v.sessions||[]).length} sessões? <button class="btn sm pri" id="impOk" type="button">Substituir</button><button class="btn sm" id="impNo" type="button">Cancelar</button></div>`;
+    document.getElementById("impNo").onclick=()=>box.innerHTML="";
+    document.getElementById("impOk").onclick=async()=>{box.innerHTML="";
+      const antigas=S.sessions.map(s=>s.id); applyState(v,true);
+      if(Store.mode==="db"){try{for(const id of antigas)await Store.sessCol.doc(id).delete();for(const s of S.sessions)await Store.sessCol.doc(s.id).set(s);}catch(x){toast("Importação parcial: "+(x.code||"erro"));}}
+      saveState(); render(); toast("Backup importado");};
+  };
+  rd.readAsText(f); e.target.value="";
+});
+
+try{const t=localStorage.getItem(LS+"-tab");if(t&&document.getElementById(t))abrirTab(t);}catch(e){}
+const h0=(location.hash||"").slice(1); if(h0&&document.getElementById(h0)&&["hoje","edital","registro","ciclo","ajustes"].includes(h0))abrirTab(h0);
+initStore();
+</script>
