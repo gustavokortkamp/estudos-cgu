@@ -122,7 +122,7 @@ table{border-collapse:collapse;width:100%;font-size:.86rem}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap}
 td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-td input.q{width:64px;text-align:right}
+td input.q{width:76px;text-align:right}
 .week{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;min-width:880px}
 .day h4{margin:0 0 6px;font-size:.8rem;display:flex;justify-content:space-between}
 .day h4 input{width:48px;padding:2px 4px;text-align:right;font-size:.78rem}
@@ -133,6 +133,22 @@ td input.q{width:64px;text-align:right}
 .toast.show{opacity:1}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
 .hint{font-size:.8rem;color:var(--muted)}
+.fase{display:grid;gap:12px;margin-bottom:16px}
+.fase-now{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.fase-now b{font-family:var(--f-display);font-size:1.05rem}
+.fase-now p{margin:0;color:var(--muted);font-size:.9rem;max-width:75ch;flex-basis:100%}
+.phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.ph{background:var(--sunk);border-radius:6px;padding:6px 8px;font-size:.74rem;color:var(--muted);min-width:0;border-top:3px solid var(--line)}
+.ph b{display:block;color:var(--fg);font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph.on{border-top-color:var(--accent);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.ph.on b{color:var(--accent)}
+.ph.past{opacity:.55}
+.weeknav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.weeknav span{font-size:.88rem;font-weight:500}
+.fz{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:-2px 0 6px}
+.fz.questoes{color:var(--warn)}.fz.revisao,.fz.vespera{color:var(--bad)}.fz.prova{color:var(--ok)}
+.blk.dsc{background:transparent;border:1px dashed var(--line);border-left:3px solid var(--c)}
+@media (max-width:560px){.phases{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mark{background:var(--mark);color:var(--mark-ink);padding:0 3px;border-radius:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media (max-width:560px){.item{grid-template-columns:1fr}.slot{grid-template-columns:1fr auto}.slot .h{grid-column:1/-1}}
@@ -159,6 +175,7 @@ td input.q{width:64px;text-align:right}
 <section id="hoje">
   <h2 id="hojeTitulo">Hoje</h2>
   <p class="lede" id="hojeLede"></p>
+  <div class="card fase" id="faseBox"></div>
   <div class="stats" id="stats"></div>
   <div class="grid g2">
     <div class="card">
@@ -220,16 +237,19 @@ td input.q{width:64px;text-align:right}
 
 <section id="ciclo" hidden>
   <h2>Prioridades e ciclo semanal</h2>
-  <p class="lede">Mesma lógica da sua aba Planejamento1: importância (pontos) × tamanho (itens) × (1 − domínio). O domínio vem dos níveis marcados no edital, então o ciclo se ajusta conforme você avança.</p>
+  <p class="lede">Mesma lógica da sua aba Planejamento1: importância (pontos) × tamanho (itens, com ★ valendo o dobro) × (1 − domínio). O peso muda em cada fase da reta final: na fase de questões o domínio pesa menos, e na revisão final vale só a pontuação de cada disciplina.</p>
   <div class="card">
     <h3>Peso das disciplinas</h3>
     <div class="tbl"><table id="tPrior"></table></div>
+    <p class="hint" id="priorFase"></p>
     <p class="hint">O edital não divide os itens de cada prova por disciplina. As questões estimadas começam com divisão igual (P1: 40, P2: 40, P3: 90 itens) e você pode ajustar.</p>
+    <label class="chk" style="margin-top:8px">Discursivas por semana <input type="number" id="cDsc" min="0" max="7" style="width:60px" class="num"></label>
   </div>
   <div class="card" style="margin-top:16px">
     <h3>Ciclo da semana <span class="hint" id="cicloTotal"></span></h3>
+    <div class="weeknav"><button class="btn sm" type="button" id="wPrev" aria-label="Semana anterior">‹</button><span id="wLabel"></span><button class="btn sm" type="button" id="wNext" aria-label="Próxima semana">›</button><button class="btn sm ghost" type="button" id="wHoje">Esta semana</button></div>
     <div class="tbl"><div class="week" id="week"></div></div>
-    <p class="hint">Blocos de 1 hora. Altere as horas de cada dia direto no cabeçalho.</p>
+    <p class="hint">Blocos de 1 hora. As horas de cada dia valem para todas as semanas; altere direto no cabeçalho. Na véspera da prova o ciclo usa no máximo 2 h.</p>
   </div>
 </section>
 
@@ -272,10 +292,12 @@ const CORES = ["#2b54c9","#1f8a5b","#b7791f","#c2413a","#7a4cc2","#0f8a9d","#a85
 const DISC = {}, ITEM = {}, ALL_ITEMS = [];
 EDITAL.forEach((d,i)=>{d.cor=CORES[i%CORES.length];d.itens=[];DISC[d.id]=d;
   d.topicos.forEach(t=>t.itens.forEach(it=>{it.disc=d.id;it.top=t.nome;ITEM[it.id]=it;d.itens.push(it);ALL_ITEMS.push(it);}));});
+const DSC={id:"DSC",nome:"Prova discursiva",prova:"P4",cor:"#55607a",itens:[],topicos:[]}; DISC.DSC=DSC;
+const DISC_REG=[...EDITAL,DSC];
 
 function defaultCfg(){
   const q={}; EDITAL.forEach(d=>{const n=EDITAL.filter(x=>x.prova===d.prova).length;q[d.id]=Math.round(PROVA[d.prova].itens/n*10)/10;});
-  return {prova:"",rev:[1,7,30],horas:{seg:3,ter:4,qua:4,qui:3,sex:3,sab:4,dom:4},q};
+  return {prova:"2026-12-13",dsc:1,rev:[1,7,30],horas:{seg:3,ter:4,qua:4,qui:3,sex:3,sab:4,dom:4},q};
 }
 let S = {levels:{},revDone:{},cfg:defaultCfg(),sessions:[]};
 
@@ -288,6 +310,7 @@ function applyState(v,withSessions){
   if(v.levels)S.levels=v.levels; if(v.revDone)S.revDone=v.revDone;
   if(v.cfg)S.cfg=Object.assign(defaultCfg(),v.cfg,{q:Object.assign(defaultCfg().q,v.cfg.q||{}),horas:Object.assign(defaultCfg().horas,v.cfg.horas||{})});
   if(withSessions&&Array.isArray(v.sessions))S.sessions=v.sessions;
+  if(!S.cfg.prova)S.cfg.prova="2026-12-13";
 }
 function saveState(){
   if(Store.mode==="local"){lsSave();return;}
@@ -348,38 +371,72 @@ const fmtData=s=>{const d=new Date(s+"T12:00:00");return d.toLocaleDateString("p
 function inicioSemana(){const d=new Date();const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return iso(d);}
 function dominio(d){const n=d.itens.length;let s=0;d.itens.forEach(it=>s+=lv(it.id));return n?s/(3*n):0;}
 function contaNiveis(itens){const c=[0,0,0,0];itens.forEach(it=>c[lv(it.id)]++);return c;}
-function prioridades(){
+const diasAte=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
+const FASES={
+  normal:{nome:"Fase 1 · Teoria + questões",curto:"Teoria",txt:"Avance nos itens de menor nível, começando pelos ★. Feche cada sessão com questões Cebraspe do mesmo assunto."},
+  questoes:{nome:"Fase 2 · Questões",curto:"Questões",txt:"Baterias de Certo/Errado por disciplina, começando pelos itens que você já viu e ainda não treinou em questões. Teoria só para tapar os buracos que as questões mostrarem."},
+  revisao:{nome:"Fase 3 · Revisão final",curto:"Revisão",txt:"Material de revisão, mapas e flashcards dos itens ★, mais questões. Nada de conteúdo novo."},
+  vespera:{nome:"Véspera da prova",curto:"Véspera",txt:"No máximo 2 h de revisão leve. Separe documento com foto e caneta de tinta preta, confira o local da prova e durma cedo."},
+  prova:{nome:"Dia da prova",curto:"Prova",txt:"Em dúvida real num item Certo/Errado, deixe em branco: o erro anula um acerto. Boa prova!"},
+  pos:{nome:"Prova realizada",curto:"—",txt:"Atualize a data em Ajustes se for usar o site para o próximo concurso."}
+};
+function fase(dia){
+  if(!S.cfg.prova)return "normal";
+  const d=diasAte(dia,S.cfg.prova);
+  if(d<0)return "pos"; if(d===0)return "prova"; if(d===1)return "vespera";
+  if(d<=6)return "revisao"; if(d<=13)return "questoes"; return "normal";
+}
+function limitesFases(){const p=S.cfg.prova;if(!p)return null;
+  return [{id:"normal",de:null,ate:addDias(p,-14)},{id:"questoes",de:addDias(p,-13),ate:addDias(p,-7)},{id:"revisao",de:addDias(p,-6),ate:addDias(p,-2)},{id:"vespera",de:addDias(p,-1),ate:addDias(p,-1)}];}
+const wItem=it=>it.star?2:1;
+function prioridades(fid){
+  fid=fid||"normal"; if(fid==="vespera")fid="revisao"; if(fid==="prova"||fid==="pos")fid="normal";
   const pts=EDITAL.map(d=>(+S.cfg.q[d.id]||0)*PROVA[d.prova].peso);
   const totP=pts.reduce((a,b)=>a+b,0)||1;
-  const totI=ALL_ITEMS.length;
-  const rows=EDITAL.map((d,i)=>{const imp=pts[i]/totP,tam=d.itens.length/totI,dom=dominio(d);return {d,pts:pts[i],imp,tam,dom,k:imp*tam*(1-dom)};});
+  const totW=ALL_ITEMS.reduce((a,it)=>a+wItem(it),0);
+  const rows=EDITAL.map((d,i)=>{
+    const w=d.itens.reduce((a,it)=>a+wItem(it),0);
+    const domW=w?d.itens.reduce((a,it)=>a+wItem(it)*lv(it.id),0)/(3*w):0;
+    const imp=pts[i]/totP,tam=w/totW,dom=dominio(d);
+    const k=fid==="revisao"?imp:fid==="questoes"?imp*tam*(1-0.5*domW):imp*tam*(1-domW);
+    return {d,pts:pts[i],imp,tam,dom,k};});
   const tk=rows.reduce((a,r)=>a+r.k,0)||1; rows.forEach(r=>r.rel=r.k/tk); return rows;
 }
-function gerarCiclo(){
-  const rows=prioridades();
-  const total=ORDEM_DIAS.reduce((a,k)=>a+(+S.cfg.horas[k]||0),0);
-  // maior resto
-  let alloc=rows.map(r=>({d:r.d,exact:r.rel*total}));
-  alloc.forEach(a=>{a.n=Math.floor(a.exact);a.rest=a.exact-a.n;});
-  let falta=total-alloc.reduce((s,a)=>s+a.n,0);
-  [...alloc].sort((a,b)=>b.rest-a.rest).slice(0,Math.max(0,falta)).forEach(a=>a.n++);
-  const rem={}; alloc.forEach(a=>rem[a.d.id]=a.n);
-  const sem={}; let prev=null;
-  ORDEM_DIAS.forEach(k=>{
-    sem[k]=[]; const usados=new Set();
-    for(let h=0;h<(+S.cfg.horas[k]||0);h++){
-      const cand=Object.keys(rem).filter(id=>rem[id]>0).sort((a,b)=>rem[b]-rem[a]);
-      if(!cand.length)break;
-      let pick=cand.find(id=>!usados.has(id)&&id!==prev)||cand.find(id=>id!==prev)||cand[0];
-      rem[pick]--; usados.add(pick); sem[k].push(pick); prev=pick;
+function semanaDias(off){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+7*off);
+  return ORDEM_DIAS.map((k,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return {k,data:iso(x)};});}
+function gerarCiclo(off){
+  off=off||0; const cache={};
+  const W=fid=>cache[fid]||(cache[fid]=prioridades(fid));
+  const dias=semanaDias(off).map(x=>{const f=fase(x.data);let h=+S.cfg.horas[x.k]||0;if(f==="vespera")h=Math.min(h,2);if(f==="prova"||f==="pos")h=0;return Object.assign(x,{f,h});});
+  const dscDays=new Set(); const nDsc=+S.cfg.dsc||0;
+  for(let i=dias.length-1;i>=0&&dscDays.size<nDsc;i--){if(dias[i].h>=2&&["normal","questoes","revisao"].includes(dias[i].f))dscDays.add(i);}
+  const credit={}; EDITAL.forEach(d=>credit[d.id]=0);
+  const sem={}; let prev=null,total=0;
+  dias.forEach((x,i)=>{
+    sem[x.k]={data:x.data,f:x.f,h:x.h,slots:[]}; const usados=new Set();
+    const rows=W(x.f), rel={}; rows.forEach(r=>rel[r.d.id]=r.rel);
+    const n=x.h-(dscDays.has(i)?1:0);
+    for(let s=0;s<n;s++){
+      rows.forEach(r=>credit[r.d.id]+=r.rel);
+      const cand=rows.filter(r=>r.rel>0).map(r=>r.d.id).sort((a,b)=>credit[b]-credit[a]);
+      const pick=cand.find(id=>!usados.has(id)&&id!==prev)||cand.find(id=>id!==prev)||cand[0];
+      if(!pick)break; credit[pick]-=1; usados.add(pick); sem[x.k].slots.push(pick); prev=pick;
     }
+    if(dscDays.has(i)){sem[x.k].slots.push("DSC");prev="DSC";}
+    total+=x.h;
   });
-  return {sem,total,rows};
+  return {sem,total,dias};
 }
-function sugestao(discId){
-  const d=DISC[discId]; const its=[...d.itens].sort((a,b)=>lv(a.id)-lv(b.id)||(b.star||0)-(a.star||0));
-  return its[0];
+function sugestao(discId,fid){
+  const d=DISC[discId]; if(!d||!d.itens.length)return null;
+  const key=it=>{const l=lv(it.id),st=it.star?0:1;
+    if(fid==="questoes")return [l===1?0:l===0?1:l===2?2:3,st,l];
+    if(fid==="revisao"||fid==="vespera")return [l>=1?0:1,st,l];
+    return [l,st,0];};
+  return [...d.itens].sort((a,b)=>{const x=key(a),y=key(b);for(let i=0;i<3;i++)if(x[i]!==y[i])return x[i]-y[i];return 0;})[0];
 }
+const ROTULO_SUG={normal:"Sugestão",questoes:"Questões sobre",revisao:"Revisar",vespera:"Revisar"};
+const fmtDM=s=>s.slice(8,10)+"/"+s.slice(5,7);
 function revisoes(){
   const first={};
   S.sessions.forEach(s=>{if(s.item&&ITEM[s.item]&&(!first[s.item]||s.data<first[s.item]))first[s.item]=s.data;});
@@ -402,6 +459,8 @@ function renderHoje(){
   if(S.cfg.prova){const dias=Math.round((new Date(S.cfg.prova+"T12:00:00")-new Date(h+"T12:00:00"))/864e5);if(dias>=0)lede+=` Faltam ${dias} dias para a prova.`;}
   else lede+=" Defina a data da prova em Ajustes para ver a contagem regressiva.";
   document.getElementById("hojeLede").textContent=lede;
+  const fh=fase(h), lim=limitesFases();
+  document.getElementById("faseBox").innerHTML=`<div class="fase-now"><b>${FASES[fh].nome}</b><p>${FASES[fh].txt}</p></div>`+(lim?`<div class="phases">${lim.map(x=>{const on=x.id===fh,past=x.ate<h;return `<div class="ph ${on?'on':''} ${past&&!on?'past':''}"><b>${FASES[x.id].curto}</b>${x.de?(x.de===x.ate?fmtDM(x.de):fmtDM(x.de)+"–"+fmtDM(x.ate)):"até "+fmtDM(x.ate)}</div>`;}).join("")}</div>`:"");
 
   const c=contaNiveis(ALL_ITEMS); const prog=(c[1]+2*c[2]+3*c[3])/(3*ALL_ITEMS.length);
   const ini=inicioSemana(); const semSess=S.sessions.filter(s=>s.data>=ini);
@@ -417,12 +476,14 @@ function renderHoje(){
     [String(pend),"revisões pendentes"]
   ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
 
-  const {sem}=gerarCiclo(); const slots=sem[dk]||[];
+  const {sem}=gerarCiclo(0); const slots=(sem[dk]&&sem[dk].slots)||[];
   const feitos=new Set(S.sessions.filter(s=>s.data===h).map(s=>s.disc));
   document.getElementById("slotsHoje").innerHTML=slots.length?slots.map((id,i)=>{
-    const d=DISC[id], it=sugestao(id), ok=feitos.has(id);
-    return `<div class="slot"><span class="h">${i+1}ª hora</span><div class="t"><b><span class="num" style="color:${d.cor}">${d.id}</span> ${esc(d.nome)}</b><small>Sugestão: ${esc(it.t)} <span class="pill">nível ${lv(it.id)}</span>${it.star?' <span class="pill star">★</span>':''}</small></div>
-    <button class="btn sm ${ok?'ghost':''}" data-reg="${id}" data-item="${it.id}">${ok?'Registrado':'Registrar'}</button></div>`;}).join(""):`<p class="empty">Nenhuma hora prevista para hoje. Ajuste em Prioridades e ciclo.</p>`;
+    const d=DISC[id], ok=feitos.has(id);
+    if(id==="DSC")return `<div class="slot"><span class="h">${i+1}ª hora</span><div class="t"><b><span class="num" style="color:${d.cor}">DSC</span> Treino de discursiva</b><small>Escreva uma resposta no tempo de prova (30 linhas complementares ou 60 linhas específicas) e corrija pelo espelho.</small></div><button class="btn sm ${ok?'ghost':''}" data-reg="DSC" data-item="">${ok?'Registrado':'Registrar'}</button></div>`;
+    const it=sugestao(id,fh);
+    return `<div class="slot"><span class="h">${i+1}ª hora</span><div class="t"><b><span class="num" style="color:${d.cor}">${d.id}</span> ${esc(d.nome)}</b><small>${ROTULO_SUG[fh]||"Sugestão"}: ${esc(it.t)} <span class="pill">nível ${lv(it.id)}</span>${it.star?' <span class="pill star">★</span>':''}</small></div>
+    <button class="btn sm ${ok?'ghost':''}" data-reg="${id}" data-item="${it.id}">${ok?'Registrado':'Registrar'}</button></div>`;}).join(""):`<p class="empty">${fh==="prova"?"Hoje é dia de prova. Nada de estudo.":fh==="pos"?"A prova já passou.":"Nenhuma hora prevista para hoje. Ajuste em Prioridades e ciclo."}</p>`;
 
   const vis=revs.filter(r=>!r.done&&r.due<=addDias(h,3)).slice(0,12);
   document.getElementById("revs").innerHTML=vis.length?vis.map(r=>{const it=ITEM[r.item];const atras=r.due<h,hj=r.due===h;
@@ -457,15 +518,15 @@ function renderEdital(){
 
 function preencheItens(discId,sel){
   const s=document.getElementById("sItem");
-  s.innerHTML=`<option value="">— sem item específico —</option>`+(discId?DISC[discId].topicos.map(t=>`<optgroup label="${esc(t.n+'. '+t.nome)}">`+t.itens.map(it=>`<option value="${it.id}">${it.id} · ${esc(it.t.slice(0,90))} (nível ${lv(it.id)})</option>`).join("")+`</optgroup>`).join(""):"");
+  s.innerHTML=`<option value="">— sem item específico —</option>`+(discId&&DISC[discId]?DISC[discId].topicos.map(t=>`<optgroup label="${esc(t.n+'. '+t.nome)}">`+t.itens.map(it=>`<option value="${it.id}">${it.id} · ${esc(it.t.slice(0,90))} (nível ${lv(it.id)})</option>`).join("")+`</optgroup>`).join(""):"");
   if(sel)s.value=sel;
 }
 function renderRegistro(){
   const sd=document.getElementById("sDisc");
-  if(!sd.options.length){sd.innerHTML=`<option value="">Escolha…</option>`+EDITAL.map(d=>`<option value="${d.id}">${d.id} · ${esc(d.nome)}</option>`).join("");document.getElementById("sData").value=hoje();preencheItens("");}
+  if(!sd.options.length){sd.innerHTML=`<option value="">Escolha…</option>`+DISC_REG.map(d=>`<option value="${d.id}">${d.id} · ${esc(d.nome)}</option>`).join("");document.getElementById("sData").value=hoje();}
   calcForm();
   const ini=inicioSemana(); const sem=S.sessions.filter(s=>s.data>=ini);
-  const linhas=EDITAL.map(d=>{const ss=sem.filter(s=>s.disc===d.id);if(!ss.length)return"";const r=resumoQuestoes(ss);const min=ss.reduce((a,s)=>a+(+s.min||0),0);const pg=ss.reduce((a,s)=>a+pags(s),0);
+  const linhas=DISC_REG.map(d=>{const ss=sem.filter(s=>s.disc===d.id);if(!ss.length)return"";const r=resumoQuestoes(ss);const min=ss.reduce((a,s)=>a+(+s.min||0),0);const pg=ss.reduce((a,s)=>a+pags(s),0);
     return `<tr><td><span class="num">${d.id}</span> ${esc(d.nome)}</td><td class="n">${(min/60).toFixed(1).replace(".",",")}</td><td class="n">${pg||"–"}</td><td class="n">${r.q||"–"}</td><td class="n">${pct(r.pct)}</td><td class="n">${r.liq==null?"–":(r.liq*100).toFixed(0)+"%"}</td></tr>`;}).join("");
   document.getElementById("tSemana").innerHTML=linhas?`<thead><tr><th>Disciplina</th><th class="n">Horas</th><th class="n">Páginas</th><th class="n">Questões</th><th class="n">Acertos</th><th class="n">Líquida</th></tr></thead><tbody>${linhas}</tbody>`:`<tbody><tr><td class="empty">Nenhuma sessão desde segunda-feira.</td></tr></tbody>`;
   const ult=[...S.sessions].sort((a,b)=>b.data.localeCompare(a.data)||b.ts-a.ts).slice(0,40);
@@ -481,13 +542,24 @@ function calcForm(){
   document.getElementById("sCalc").textContent=parts.join(" · ");
 }
 
+let semOff=0;
 function renderCiclo(){
-  const {sem,total,rows}=gerarCiclo();
-  document.getElementById("tPrior").innerHTML=`<thead><tr><th>Disciplina</th><th>Prova</th><th class="n">Questões</th><th class="n">Pontos</th><th class="n">Itens</th><th class="n">Domínio</th><th class="n">Prioridade</th><th class="n">h/semana</th></tr></thead><tbody>`+
-    [...rows].sort((a,b)=>b.rel-a.rel).map(r=>`<tr><td><span class="num" style="color:${r.d.cor}">${r.d.id}</span> ${esc(r.d.nome)}</td><td>${r.d.prova}</td><td class="n"><input class="q num" type="number" min="0" step="0.5" id="q-${r.d.id}" data-q="${r.d.id}" value="${S.cfg.q[r.d.id]}"></td><td class="n">${fmtN(r.pts)}</td><td class="n">${r.d.itens.length}</td><td class="n">${pct(r.dom)}</td><td class="n">${(r.rel*100).toFixed(1).replace(".",",")}%</td><td class="n">${(r.rel*total).toFixed(1).replace(".",",")}</td></tr>`).join("")+`</tbody>`;
-  const dk=DIAS[new Date().getDay()];
-  document.getElementById("cicloTotal").textContent=`· ${total} h na semana`;
-  document.getElementById("week").innerHTML=ORDEM_DIAS.map(k=>`<div class="day ${k===dk?'today':''}"><h4>${DIAS_N[k]}<input type="number" min="0" max="16" id="h-${k}" data-h="${k}" value="${S.cfg.horas[k]}" aria-label="Horas em ${DIAS_N[k]}" class="num"></h4>${sem[k].map((id,i)=>`<div class="blk" style="--c:${DISC[id].cor}"><b>${id}</b> ${esc(DISC[id].nome.length>42?DISC[id].nome.slice(0,40)+"…":DISC[id].nome)}</div>`).join("")||'<p class="hint">Descanso</p>'}</div>`).join("");
+  const fh=fase(hoje());
+  const {sem,total,dias}=gerarCiclo(semOff);
+  const rows=prioridades(fh);
+  const totalBase=ORDEM_DIAS.reduce((a,k)=>a+(+S.cfg.horas[k]||0),0)-(+S.cfg.dsc||0);
+  document.getElementById("tPrior").innerHTML=`<thead><tr><th>Disciplina</th><th>Prova</th><th class="n">Questões</th><th class="n">Pontos</th><th class="n">Itens</th><th class="n">★</th><th class="n">Domínio</th><th class="n">Prioridade</th><th class="n">h/semana</th></tr></thead><tbody>`+
+    [...rows].sort((a,b)=>b.rel-a.rel).map(r=>`<tr><td><span class="num" style="color:${r.d.cor}">${r.d.id}</span> ${esc(r.d.nome)}</td><td>${r.d.prova}</td><td class="n"><input class="q num" type="number" min="0" step="0.5" id="q-${r.d.id}" data-q="${r.d.id}" value="${S.cfg.q[r.d.id]}"></td><td class="n">${fmtN(r.pts)}</td><td class="n">${r.d.itens.length}</td><td class="n">${r.d.itens.filter(i=>i.star).length||"–"}</td><td class="n">${pct(r.dom)}</td><td class="n">${(r.rel*100).toFixed(1).replace(".",",")}%</td><td class="n">${(r.rel*Math.max(0,totalBase)).toFixed(1).replace(".",",")}</td></tr>`).join("")+`</tbody>`;
+  document.getElementById("priorFase").textContent=`Prioridades calculadas para a fase atual: ${FASES[fh].nome}.`;
+  const dsc=document.getElementById("cDsc"); if(document.activeElement!==dsc)dsc.value=S.cfg.dsc;
+  const h=hoje();
+  document.getElementById("cicloTotal").textContent=`· ${total} h nesta semana`;
+  document.getElementById("wLabel").textContent=`${fmtDM(dias[0].data)} a ${fmtDM(dias[6].data)}`+(semOff===0?" (esta semana)":"");
+  document.getElementById("wPrev").disabled=semOff<=0;
+  document.getElementById("week").innerHTML=ORDEM_DIAS.map(k=>{const x=sem[k];
+    const blocos=x.slots.map(id=>id==="DSC"?`<div class="blk dsc" style="--c:${DSC.cor}"><b>DSC</b> Treino de discursiva</div>`:`<div class="blk" style="--c:${DISC[id].cor}"><b>${id}</b> ${esc(DISC[id].nome.length>42?DISC[id].nome.slice(0,40)+"…":DISC[id].nome)}</div>`).join("");
+    const vazio=x.f==="prova"?'<p class="hint">Prova</p>':x.f==="pos"?'<p class="hint">—</p>':'<p class="hint">Descanso</p>';
+    return `<div class="day ${x.data===h?'today':''}"><h4><span>${DIAS_N[k].slice(0,3)} <span class="hint num">${fmtDM(x.data)}</span></span><input type="number" min="0" max="16" id="h-${k}" data-h="${k}" value="${S.cfg.horas[k]}" aria-label="Horas em ${DIAS_N[k]}" class="num"></h4><div class="fz ${x.f}">${FASES[x.f].curto}${x.f==="vespera"?" · máx. 2 h":""}</div>${blocos||vazio}</div>`;}).join("");
 }
 const fmtN=v=>Number.isInteger(v)?String(v):v.toFixed(1).replace(".",",");
 
@@ -541,7 +613,11 @@ document.getElementById("fSessao").addEventListener("submit",e=>{
   ["sMat","sPi","sPf","sQ","sA"].forEach(id=>document.getElementById(id).value="");
   calcForm(); toast("Sessão salva."+subiu);
 });
-document.getElementById("cProva").addEventListener("change",e=>{S.cfg.prova=e.target.value;saveState();renderHoje();});
+document.getElementById("wPrev").addEventListener("click",()=>{if(semOff>0){semOff--;renderCiclo();}});
+document.getElementById("wNext").addEventListener("click",()=>{semOff++;renderCiclo();});
+document.getElementById("wHoje").addEventListener("click",()=>{semOff=0;renderCiclo();});
+document.getElementById("cDsc").addEventListener("change",e=>{S.cfg.dsc=Math.max(0,Math.min(7,Math.round(+e.target.value||0)));saveState();renderCiclo();renderHoje();});
+document.getElementById("cProva").addEventListener("change",e=>{S.cfg.prova=e.target.value;saveState();renderHoje();renderCiclo();});
 document.getElementById("cRev").addEventListener("change",e=>{const v=e.target.value.split(/[,; ]+/).map(Number).filter(n=>n>0&&n<400);if(v.length){S.cfg.rev=[...new Set(v)].sort((a,b)=>a-b);saveState();renderHoje();toast("Intervalos de revisão atualizados");}renderAjustes();});
 
 document.getElementById("bExport").addEventListener("click",async()=>{
