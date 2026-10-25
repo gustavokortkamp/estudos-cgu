@@ -1,5 +1,5 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Estudos CGU Cargo 3</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -265,8 +265,22 @@ td input.q{width:76px;text-align:right}
       <p class="hint">Cada item estudado gera revisões nesses intervalos, contados a partir do primeiro estudo.</p>
     </div>
     <div class="card">
+      <h3>Sincronização (Google Sheets)</h3>
+      <p class="hint">Cole a URL do App da Web e a senha que você colocou no script. Fica guardado só neste aparelho; faça uma vez no PC e uma vez no celular.</p>
+      <div class="form">
+        <label class="full">URL do App da Web<input type="url" id="gUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
+        <label class="full">Senha<input type="password" id="gKey" autocomplete="current-password"></label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn pri" id="gConn" type="button">Conectar</button>
+        <button class="btn" id="gSync" type="button">Sincronizar agora</button>
+        <button class="btn ghost danger" id="gOff" type="button">Desconectar</button>
+      </div>
+      <p class="hint" id="gStatus" style="margin-top:8px"></p>
+    </div>
+    <div class="card">
       <h3>Backup</h3>
-      <p class="hint">Exporte tudo em JSON, e importe de volta quando quiser. O mesmo arquivo serve para migrar para a versão no GitHub Pages.</p>
+      <p class="hint">Exporte tudo em JSON e importe de volta quando quiser. Bom para ter uma cópia extra além da planilha.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="bExport" type="button">Exportar backup</button>
         <label class="btn" for="bImport">Importar backup</label>
@@ -301,66 +315,101 @@ function defaultCfg(){
 }
 let S = {levels:{},revDone:{},cfg:defaultCfg(),sessions:[]};
 
-// ---------- armazenamento ----------
-const Store = {mode:"local",db:null,base:null,stateRef:null,sessCol:null,timer:null,writing:false,dirty:false};
-const LS="cgu3-estudos";
-function lsLoad(){try{const v=JSON.parse(localStorage.getItem(LS)||"null");if(v)applyState(v,true);}catch(e){}}
-function lsSave(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+// ---------- armazenamento: navegador + Google Sheets ----------
+const Store = {mode:"local",url:"",key:"",rev:0,timer:null,writing:false,dirty:false,status:""};
+const LS="cgu3-estudos", LSC="cgu3-sync";
+if(!Array.isArray(S.del))S.del=[];
+function snapshot(){return {levels:S.levels,revDone:S.revDone,cfg:S.cfg,sessions:S.sessions,del:S.del.slice(-1000),updated:Date.now()};}
+function lsLoad(){try{const v=JSON.parse(localStorage.getItem(LS)||"null");if(v){applyState(v,true);Store.rev=+v._rev||0;Store.dirty=!!v._dirty;}}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(Object.assign(snapshot(),{_rev:Store.rev,_dirty:Store.dirty})));}catch(e){}}
 function applyState(v,withSessions){
   if(v.levels)S.levels=v.levels; if(v.revDone)S.revDone=v.revDone;
   if(v.cfg)S.cfg=Object.assign(defaultCfg(),v.cfg,{q:Object.assign(defaultCfg().q,v.cfg.q||{}),horas:Object.assign(defaultCfg().horas,v.cfg.horas||{})});
   if(withSessions&&Array.isArray(v.sessions))S.sessions=v.sessions;
+  if(Array.isArray(v.del))S.del=v.del;
   if(!S.cfg.prova)S.cfg.prova="2026-12-13";
 }
+// junta o que veio da planilha com o que está neste aparelho
+function merge(r){
+  if(!r)return;
+  const dels=new Set([...(S.del||[]),...(r.del||[])]);
+  const map=new Map();
+  (r.sessions||[]).forEach(s=>map.set(s.id,s)); S.sessions.forEach(s=>map.set(s.id,s));
+  S.sessions=[...map.values()].filter(s=>!dels.has(s.id));
+  S.del=[...dels].slice(-1000);
+  const lv2={...(r.levels||{})}; for(const k in S.levels)lv2[k]=Math.max(lv2[k]||0,S.levels[k]); S.levels=lv2;
+  S.revDone=Object.assign({},r.revDone||{},S.revDone);
+}
 function saveState(){
-  if(Store.mode==="local"){lsSave();return;}
-  Store.dirty=true; clearTimeout(Store.timer); Store.timer=setTimeout(flushState,700);
+  lsSave();
+  if(Store.mode!=="sheets")return;
+  Store.dirty=true; lsSave(); clearTimeout(Store.timer); Store.timer=setTimeout(push,1200);
 }
-async function flushState(){
-  if(Store.writing||!Store.dirty)return; Store.writing=true; Store.dirty=false;
-  try{await Store.stateRef.set({levels:S.levels,revDone:S.revDone,cfg:S.cfg,updated:Date.now()});}
-  catch(e){toast("Não consegui salvar agora. Tento de novo na próxima alteração.");Store.dirty=true;}
-  Store.writing=false; if(Store.dirty)flushState();
-}
-async function addSession(s){
-  if(Store.mode==="local"){S.sessions.push(s);lsSave();render();return;}
-  S.sessions.push(s); render();
-  try{await Store.sessCol.doc(s.id).set(s);}catch(e){toast("Sessão não foi salva na conta: "+(e.code||"erro"));}
-}
-async function delSession(id){
-  S.sessions=S.sessions.filter(x=>x.id!==id); render();
-  if(Store.mode==="local"){lsSave();return;}
-  try{await Store.sessCol.doc(id).delete();}catch(e){toast("Não consegui apagar na conta.");}
-}
-function setSync(on,txt){document.getElementById("syncDot").classList.toggle("on",on);document.getElementById("syncTxt").textContent=txt;}
+function addSession(s){S.sessions.push(s);saveState();render();}
+function delSession(id){S.sessions=S.sessions.filter(x=>x.id!==id);S.del.push(id);saveState();render();}
+function setSync(on,txt){Store.status=txt;document.getElementById("syncDot").classList.toggle("on",on);document.getElementById("syncTxt").textContent=txt;const g=document.getElementById("gStatus");if(g)g.textContent=txt;}
 
+async function api(body,url,key){
+  const r=await fetch(url||Store.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({key:key||Store.key},body))});
+  if(!r.ok)throw new Error("http "+r.status);
+  return r.json();
+}
+function erroApi(r){
+  if(r&&r.erro==="senha"){setSync(false,"Senha incorreta — confira em Ajustes");return true;}
+  return false;
+}
+async function pull(){
+  if(Store.mode!=="sheets"||Store.writing)return;
+  if(Store.dirty){push();return;}
+  try{
+    const r=await api({action:"load"});
+    if(!r.ok){if(!erroApi(r))setSync(false,"Erro na planilha — salvo neste navegador");return;}
+    if(r.state&&r.rev!==Store.rev&&!Store.dirty){applyState(r.state,true);Store.rev=r.rev;lsSave();render();}
+    setSync(true,"Sincronizado com a planilha");
+  }catch(e){setSync(false,"Sem conexão — salvo neste navegador");}
+}
+async function push(){
+  if(Store.mode!=="sheets")return;
+  if(Store.writing){Store.dirty=true;return;}
+  Store.writing=true; Store.dirty=false; clearTimeout(Store.timer);
+  setSync(false,"Salvando…");
+  try{
+    const r=await api({baseRev:Store.rev,state:snapshot()});
+    if(r.ok){Store.rev=r.rev;setSync(true,"Sincronizado com a planilha");}
+    else if(r.erro==="conflito"){merge(r.state);Store.rev=r.rev;Store.dirty=true;render();}
+    else{if(!erroApi(r))setSync(false,"Erro na planilha — salvo neste navegador");}
+  }catch(e){Store.dirty=true;setSync(false,"Sem conexão — salvo neste navegador");Store.writing=false;lsSave();Store.timer=setTimeout(push,15000);return;}
+  Store.writing=false; lsSave();
+  if(Store.dirty)push();
+}
+async function conectar(url,key){
+  url=(url||"").trim(); key=(key||"").trim();
+  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){toast("A URL deve começar com https://script.google.com/");return;}
+  if(!key){toast("Digite a senha que você colocou no script.");return;}
+  setSync(false,"Conectando…");
+  let r;
+  try{r=await api({action:"load"},url,key);}catch(e){setSync(false,"Não consegui falar com a planilha. Confira a URL e a implantação.");return;}
+  if(!r.ok){if(!erroApi(r))setSync(false,"Erro na planilha");return;}
+  Store.url=url; Store.key=key; Store.mode="sheets";
+  try{localStorage.setItem(LSC,JSON.stringify({url,key}));}catch(e){}
+  if(r.state){merge(r.state);Store.rev=r.rev;}else{Store.rev=r.rev||0;}
+  render(); Store.dirty=true; await push();
+  toast("Planilha conectada");
+}
+function desconectar(){
+  Store.mode="local"; Store.url=""; Store.key=""; Store.rev=0; Store.dirty=false;
+  try{localStorage.removeItem(LSC);}catch(e){}
+  lsSave(); setSync(false,"Só neste navegador — conecte a planilha em Ajustes"); render();
+}
 async function initStore(){
   lsLoad(); render();
-  setSync(false,"Salvo neste navegador");
-  if(!window.claude||!window.claude.use)return;
-  try{
-    const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
-    if(!db||!user)return;
-    const uid=await user.id(); if(!uid)return;
-    Store.db=db; Store.base="data/users/"+uid;
-    Store.stateRef=db.doc(Store.base+"/state");
-    Store.sessCol=Store.stateRef.collection("sessions");
-    const snap=await Store.stateRef.get();
-    if(!snap.exists){
-      // primeira vez na conta: leva o que houver no navegador
-      await Store.stateRef.set({levels:S.levels,revDone:S.revDone,cfg:S.cfg,updated:Date.now()});
-      for(const s of S.sessions){await Store.sessCol.doc(s.id).set(s);}
-    }
-    Store.mode="db"; setSync(true,"Sincronizado na sua conta");
-    Store.stateRef.onSnapshot(sn=>{
-      if(!sn.exists||sn.metadata.hasPendingWrites||Store.dirty||Store.writing)return;
-      applyState(sn.data(),false); render();
-    },()=>setSync(false,"Sincronização interrompida"));
-    Store.sessCol.onSnapshot(qs=>{
-      S.sessions=qs.docs.map(d=>Object.assign({},d.data())); render();
-    },()=>setSync(false,"Sincronização interrompida"));
-  }catch(e){setSync(false,"Salvo neste navegador");}
+  let c=null; try{c=JSON.parse(localStorage.getItem(LSC)||"null");}catch(e){}
+  if(!c||!c.url){setSync(false,"Só neste navegador — conecte a planilha em Ajustes");return;}
+  Store.url=c.url; Store.key=c.key; Store.mode="sheets"; setSync(false,"Conectando…");
+  if(Store.dirty)push(); else pull();
 }
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull();});
+setInterval(()=>{if(document.visibilityState==="visible")pull();},60000);
 
 // ---------- cálculos ----------
 const lv=id=>S.levels[id]||0;
@@ -567,6 +616,10 @@ function renderAjustes(){
   const p=document.getElementById("cProva"),r=document.getElementById("cRev");
   if(document.activeElement!==p)p.value=S.cfg.prova||"";
   if(document.activeElement!==r)r.value=S.cfg.rev.join(", ");
+  const gu=document.getElementById("gUrl"); if(document.activeElement!==gu&&Store.url)gu.value=Store.url;
+  document.getElementById("gSync").hidden=Store.mode!=="sheets"; document.getElementById("gOff").hidden=Store.mode!=="sheets";
+  document.getElementById("gConn").textContent=Store.mode==="sheets"?"Reconectar":"Conectar";
+  document.getElementById("gStatus").textContent=Store.status||"";
 }
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -623,7 +676,7 @@ document.getElementById("cRev").addEventListener("change",e=>{const v=e.target.v
 document.getElementById("bExport").addEventListener("click",async()=>{
   const data=JSON.stringify({app:"cgu3-estudos",versao:1,exportado:new Date().toISOString(),levels:S.levels,revDone:S.revDone,cfg:S.cfg,sessions:S.sessions},null,1);
   const nome=`estudos-cgu-${hoje()}.json`;
-  try{const dl=await claude.use("downloads");if(dl){await dl.save({filename:nome,data});return;}}catch(e){if(e&&e.code==="declined")return;}
+  try{const u=URL.createObjectURL(new Blob([data],{type:"application/json"}));const a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);return;}catch(e){}
   try{await navigator.clipboard.writeText(data);toast("Backup copiado para a área de transferência");}catch(e){toast("Não consegui exportar neste navegador.");}
 });
 document.getElementById("bImport").addEventListener("change",e=>{
@@ -635,7 +688,7 @@ document.getElementById("bImport").addEventListener("change",e=>{
     document.getElementById("impNo").onclick=()=>box.innerHTML="";
     document.getElementById("impOk").onclick=async()=>{box.innerHTML="";
       const antigas=S.sessions.map(s=>s.id); applyState(v,true);
-      if(Store.mode==="db"){try{for(const id of antigas)await Store.sessCol.doc(id).delete();for(const s of S.sessions)await Store.sessCol.doc(s.id).set(s);}catch(x){toast("Importação parcial: "+(x.code||"erro"));}}
+      const novas=new Set(S.sessions.map(s=>s.id)); S.del=[...new Set([...(S.del||[]),...antigas.filter(id=>!novas.has(id))])];
       saveState(); render(); toast("Backup importado");};
   };
   rd.readAsText(f); e.target.value="";
@@ -643,5 +696,10 @@ document.getElementById("bImport").addEventListener("change",e=>{
 
 try{const t=localStorage.getItem(LS+"-tab");if(t&&document.getElementById(t))abrirTab(t);}catch(e){}
 const h0=(location.hash||"").slice(1); if(h0&&document.getElementById(h0)&&["hoje","edital","registro","ciclo","ajustes"].includes(h0))abrirTab(h0);
+document.getElementById("gConn").addEventListener("click",()=>conectar(document.getElementById("gUrl").value,document.getElementById("gKey").value));
+document.getElementById("gSync").addEventListener("click",()=>{Store.dirty?push():pull();});
+document.getElementById("gOff").addEventListener("click",desconectar);
 initStore();
 </script>
+
+</body></html>
